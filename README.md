@@ -8,6 +8,12 @@ app (PWA), todo se guarda en el propio dispositivo y al terminar se exporta a lo
 que entienden Google Earth, QGIS, AutoCAD, SketchUp o Blender.
 
 👉 **[Abrir la aplicación](https://alvar0suarez.github.io/navata/)**
+> ⚠️ Para que esa dirección funcione hay que activar Pages una vez a mano:
+> **Settings → Pages → Source: _GitHub Actions_**. El flujo de despliegue no puede
+> hacerlo solo: el `GITHUB_TOKEN` de Actions no tiene permiso para crear el sitio
+> (`Resource not accessible by integration`). A partir de ahí cada push despliega solo.
+>
+> Mientras tanto, la app se puede usar en local con `npm run serve`.
 
 ---
 
