@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#12161c">
+<title>Navata · Levantamiento topográfico de parcela</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+
+<div id="app">
+
+  <header id="topbar">
+    <button id="btn-menu" class="icon-btn" title="Proyecto" aria-label="Proyecto">☰</button>
+    <div class="title-block">
+      <h1 id="project-name">Parcela</h1>
+      <span id="project-sub" class="sub">sin datos</span>
+    </div>
+    <span id="save-state" class="save-dot" title="Guardado"></span>
+    <button id="btn-gps" class="icon-btn" title="GPS" aria-label="GPS">◎</button>
+  </header>
+
+  <main id="views">
+
+    <!-- ══════════════════ MAPA ══════════════════ -->
+    <section class="view active" id="view-map">
+      <div id="canvas-wrap">
+        <canvas id="map-canvas"></canvas>
+        <div id="map-hud">
+          <div id="hud-coords" class="hud-chip"></div>
+          <div id="hud-scale" class="hud-chip"></div>
+        </div>
+        <div id="map-tools">
+          <button class="tool-btn active" data-tool="pan" title="Mover">✋</button>
+          <button class="tool-btn" data-tool="point" title="Añadir cota">⛳</button>
+          <button class="tool-btn" data-tool="tree" title="Añadir árbol">🌳</button>
+          <button class="tool-btn" data-tool="photo" title="Estación de foto">📷</button>
+          <button class="tool-btn" data-tool="profile" title="Perfil / sección">📉</button>
+          <button class="tool-btn" data-tool="boundary" title="Editar borde">⬡</button>
+        </div>
+        <div id="map-layers">
+          <button class="layer-btn" data-layer="hypso" title="Relieve en color">🎨</button>
+          <button class="layer-btn" data-layer="hillshade" title="Sombreado">🌗</button>
+          <button class="layer-btn active" data-layer="contours" title="Curvas de nivel">〰️</button>
+          <button class="layer-btn" data-layer="slope" title="Pendiente">📐</button>
+          <button class="layer-btn" data-layer="coverage" title="Cobertura fotográfica">🛰️</button>
+          <button class="layer-btn active" data-layer="grid" title="Malla">▦</button>
+          <button class="layer-btn active" data-layer="labels" title="Etiquetas de cota">🏷️</button>
+          <button class="layer-btn" id="btn-fit" title="Encajar">⤢</button>
+        </div>
+        <div id="profile-panel" class="hidden">
+          <div class="profile-head">
+            <strong>Perfil</strong>
+            <span id="profile-stats"></span>
+            <button id="profile-close" class="icon-btn small">✕</button>
+          </div>
+          <canvas id="profile-canvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ COTAS ══════════════════ -->
+    <section class="view" id="view-points">
+      <div class="scroll">
+        <div class="card">
+          <h2>Añadir cota rápida</h2>
+          <p class="hint">Modo campo: introduce X, Y y la lectura. La app calcula la altura relativa al punto de referencia (0,000&nbsp;m).</p>
+          <div class="row3">
+            <label>X (m)<input type="number" step="0.01" id="p-x" inputmode="decimal"></label>
+            <label>Y (m)<input type="number" step="0.01" id="p-y" inputmode="decimal"></label>
+            <label>Z (m)<input type="number" step="0.001" id="p-z" inputmode="decimal"></label>
+          </div>
+          <div class="row3">
+            <label>Etiqueta<input type="text" id="p-label" placeholder="auto"></label>
+            <label>Tipo
+              <select id="p-type">
+                <option value="grid">Malla</option>
+                <option value="break">Quiebre / línea de rotura</option>
+                <option value="ref">Referencia (datum)</option>
+                <option value="edge">Borde / calle</option>
+                <option value="feature">Elemento (pozo, poste…)</option>
+              </select>
+            </label>
+            <label>Método
+              <select id="p-method">
+                <option value="hose">Manguera</option>
+                <option value="line">Cuerda + nivel</option>
+                <option value="laser">Láser</option>
+                <option value="est">Estimado</option>
+              </select>
+            </label>
+          </div>
+          <div class="btn-row">
+            <button class="primary" id="p-add">Añadir cota</button>
+            <button id="p-next">Añadir y saltar al siguiente de malla ▸</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Calculadora de manguera</h2>
+          <p class="hint">Lectura en la mira del punto, respecto a la lectura en el punto de referencia. Z = L<sub>ref</sub> − L<sub>punto</sub>.</p>
+          <div class="row3">
+            <label>L ref (cm)<input type="number" step="0.1" id="h-ref" inputmode="decimal"></label>
+            <label>L punto (cm)<input type="number" step="0.1" id="h-pt" inputmode="decimal"></label>
+            <label>→ Z (m)<input type="text" id="h-out" readonly></label>
+          </div>
+          <button id="h-use">Usar este valor como Z</button>
+        </div>
+
+        <div class="card">
+          <h2>Generador de malla</h2>
+          <div class="row3">
+            <label>Paso X (m)<input type="number" step="0.5" id="g-dx" value="4"></label>
+            <label>Paso Y (m)<input type="number" step="0.5" id="g-dy" value="4"></label>
+            <label>Orden
+              <select id="g-order">
+                <option value="boustro">Serpiente (ida y vuelta)</option>
+                <option value="rows">Por filas</option>
+              </select>
+            </label>
+          </div>
+          <div class="btn-row">
+            <button id="g-make">Generar estaciones pendientes</button>
+            <button id="g-clear" class="danger-ghost">Borrar pendientes</button>
+          </div>
+          <div id="g-info" class="hint"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Cotas <span id="pt-count" class="badge">0</span></h2>
+            <div class="btn-row tight">
+              <button id="pt-sort" class="ghost">Orden ▾</button>
+              <button id="pt-del-all" class="danger-ghost">Vaciar</button>
+            </div>
+          </div>
+          <div id="pt-list" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ ÁRBOLES ══════════════════ -->
+    <section class="view" id="view-trees">
+      <div class="scroll">
+        <div class="card">
+          <h2>Añadir árbol</h2>
+          <div class="row3">
+            <label>X (m)<input type="number" step="0.01" id="t-x" inputmode="decimal"></label>
+            <label>Y (m)<input type="number" step="0.01" id="t-y" inputmode="decimal"></label>
+            <label>Especie<input type="text" id="t-species" list="species-list" placeholder="Olivo, encina…"></label>
+          </div>
+          <datalist id="species-list">
+            <option value="Olivo"></option><option value="Encina"></option><option value="Almendro"></option>
+            <option value="Higuera"></option><option value="Nogal"></option><option value="Pino"></option>
+            <option value="Chopo"></option><option value="Naranjo"></option><option value="Ciruelo"></option>
+            <option value="Alcornoque"></option><option value="Fresno"></option><option value="Granado"></option>
+          </datalist>
+          <div class="row3">
+            <label>Ø tronco (cm)<input type="number" step="1" id="t-dbh" inputmode="decimal"></label>
+            <label>Ø copa (m)<input type="number" step="0.1" id="t-canopy" value="3" inputmode="decimal"></label>
+            <label>Altura (m)<input type="number" step="0.1" id="t-height" inputmode="decimal"></label>
+          </div>
+          <div class="row2">
+            <label>Estado
+              <select id="t-health">
+                <option value="bueno">Bueno</option>
+                <option value="regular">Regular</option>
+                <option value="malo">Malo / seco</option>
+                <option value="tocon">Tocón</option>
+              </select>
+            </label>
+            <label>Notas<input type="text" id="t-notes" placeholder="p.ej. injertado, ramas bajas"></label>
+          </div>
+          <button class="primary" id="t-add">Añadir árbol</button>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h2>Árboles <span id="t-count" class="badge">0</span></h2>
+            <button id="t-del-all" class="danger-ghost">Vaciar</button>
+          </div>
+          <div id="t-list" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ FOTOS ══════════════════ -->
+    <section class="view" id="view-photos">
+      <div class="scroll">
+        <div class="card">
+          <h2>Nueva foto orientada</h2>
+          <p class="hint">Coloca la estación en el mapa (herramienta 📷) o escribe X/Y. La brújula del móvil rellena el rumbo automáticamente al disparar.</p>
+          <div class="row3">
+            <label>X (m)<input type="number" step="0.01" id="f-x" inputmode="decimal"></label>
+            <label>Y (m)<input type="number" step="0.01" id="f-y" inputmode="decimal"></label>
+            <label>Alcance (m)<input type="number" step="1" id="f-range" value="25" inputmode="decimal"></label>
+          </div>
+          <div class="compass-row">
+            <div id="compass" class="compass">
+              <svg viewBox="-50 -50 100 100">
+                <circle r="46" class="c-bg"></circle>
+                <g id="compass-ticks"></g>
+                <g id="compass-cone"><path d="" class="c-cone"></path></g>
+                <line x1="0" y1="0" x2="0" y2="-40" class="c-needle"></line>
+                <circle r="3.5" class="c-hub"></circle>
+              </svg>
+            </div>
+            <div class="compass-fields">
+              <label>Rumbo (° respecto a +Y local)<input type="number" step="1" id="f-bearing" value="0" inputmode="decimal"></label>
+              <label>Ángulo de visión (°)<input type="number" step="1" id="f-fov" value="70" inputmode="decimal"></label>
+              <label class="chk"><input type="checkbox" id="f-usecompass"> Usar brújula del dispositivo</label>
+              <div id="compass-status" class="hint"></div>
+            </div>
+          </div>
+          <label>Nota<input type="text" id="f-note" placeholder="p.ej. mirando hacia el fondo desde la entrada"></label>
+          <div class="btn-row">
+            <label class="filebtn primary">📷 Hacer foto
+              <input type="file" id="f-capture" accept="image/*" capture="environment" hidden>
+            </label>
+            <label class="filebtn">🖼️ Desde galería
+              <input type="file" id="f-file" accept="image/*" multiple hidden>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Cobertura fotográfica</h2>
+            <span id="cov-pct" class="badge big">0%</span>
+          </div>
+          <div class="cov-bar"><div id="cov-fill"></div></div>
+          <p class="hint" id="cov-hint">Cada estación cubre un sector según su rumbo, ángulo de visión y alcance. El objetivo es llegar al 100&nbsp;% de la parcela.</p>
+          <button id="cov-suggest">Sugerir siguiente estación ▸</button>
+          <div id="cov-suggestion" class="hint"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Fotos <span id="f-count" class="badge">0</span></h2>
+            <button id="f-del-all" class="danger-ghost">Vaciar</button>
+          </div>
+          <div id="f-grid" class="photo-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ 3D ══════════════════ -->
+    <section class="view" id="view-3d">
+      <div id="c3d-wrap">
+        <canvas id="canvas-3d"></canvas>
+        <div id="c3d-controls">
+          <label>Exageración vertical <span id="ex-val">3×</span>
+            <input type="range" id="ex-range" min="1" max="15" step="0.5" value="3">
+          </label>
+          <div class="btn-row tight">
+            <button class="ghost" data-cam="iso">Isométrica</button>
+            <button class="ghost" data-cam="street">Desde la calle</button>
+            <button class="ghost" data-cam="top">Cenital</button>
+          </div>
+        </div>
+        <div id="c3d-empty" class="empty-3d">Añade al menos 3 cotas para generar el modelo.</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ DATOS ══════════════════ -->
+    <section class="view" id="view-data">
+      <div class="scroll">
+        <div class="card">
+          <h2>Parcela</h2>
+          <div class="row2">
+            <label>Nombre<input type="text" id="d-name" placeholder="La Navata"></label>
+            <label>Municipio / referencia<input type="text" id="d-place" placeholder="p.ej. Ref. catastral"></label>
+          </div>
+          <div class="row3">
+            <label>Ancho X (m)<input type="number" step="0.01" id="d-w" value="15.92" inputmode="decimal"></label>
+            <label>Fondo Y (m)<input type="number" step="0.01" id="d-h" value="44" inputmode="decimal"></label>
+            <button id="d-rect">Crear borde rectangular</button>
+          </div>
+          <div class="row2">
+            <label>Lado de la calle
+              <select id="d-street"><option value="-1">— ninguno —</option></select>
+            </label>
+            <label>Intervalo de curvas (m)<input type="number" step="0.05" id="d-ci" value="0.1" inputmode="decimal"></label>
+          </div>
+          <div class="row2">
+            <label>Fecha de visita<input type="date" id="d-visit"></label>
+            <label>Notas de campo<input type="text" id="d-notes" placeholder="Datum: clavo en esquina SO, marca a 1,00 m"></label>
+          </div>
+          <div id="d-summary" class="stats"></div>
+        </div>
+
+        <div class="card">
+          <h2>Anclaje geográfico</h2>
+          <p class="hint">Ancla el origen local (0,0) a coordenadas reales para poder exportar a Google Earth, QGIS o SketchUp con georreferencia.</p>
+          <div class="row3">
+            <label>Lat<input type="number" step="0.0000001" id="a-lat" inputmode="decimal"></label>
+            <label>Lon<input type="number" step="0.0000001" id="a-lon" inputmode="decimal"></label>
+            <label>Rumbo eje +Y (°N)<input type="number" step="0.1" id="a-rot" value="0" inputmode="decimal"></label>
+          </div>
+          <div class="btn-row">
+            <button id="a-here">Usar mi posición actual</button>
+            <button id="a-clear" class="ghost">Quitar anclaje</button>
+          </div>
+          <div id="a-status" class="hint"></div>
+        </div>
+
+        <div class="card">
+          <h2>Exportar</h2>
+          <div class="export-grid">
+            <button data-exp="json">Proyecto (.json)</button>
+            <button data-exp="csv">Cotas (.csv)</button>
+            <button data-exp="geojson">GeoJSON</button>
+            <button data-exp="kml">KML (Google Earth)</button>
+            <button data-exp="dxf">Curvas DXF (CAD)</button>
+            <button data-exp="svg">Plano SVG</button>
+            <button data-exp="obj">Malla 3D (.obj)</button>
+            <button data-exp="bundle">Todo + fotos (.zip)</button>
+          </div>
+          <p class="hint">Sin anclaje geográfico, GeoJSON/KML se exportan en coordenadas locales en metros.</p>
+        </div>
+
+        <div class="card">
+          <h2>Importar / respaldo</h2>
+          <div class="btn-row">
+            <label class="filebtn">Cargar proyecto .json<input type="file" id="d-import" accept=".json,application/json" hidden></label>
+            <button id="d-demo" class="ghost">Cargar ejemplo</button>
+            <button id="d-reset" class="danger">Empezar de cero</button>
+          </div>
+          <p class="hint">Todo se guarda en este dispositivo (funciona sin cobertura). Exporta el .json al terminar el día.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ GUÍA ══════════════════ -->
+    <section class="view" id="view-guide">
+      <div class="scroll" id="guide-content"></div>
+    </section>
+
+  </main>
+
+  <nav id="tabbar">
+    <button class="tab active" data-view="map"><span>🗺️</span>Mapa</button>
+    <button class="tab" data-view="points"><span>⛳</span>Cotas</button>
+    <button class="tab" data-view="trees"><span>🌳</span>Árboles</button>
+    <button class="tab" data-view="photos"><span>📷</span>Fotos</button>
+    <button class="tab" data-view="3d"><span>⛰️</span>3D</button>
+    <button class="tab" data-view="data"><span>💾</span>Datos</button>
+    <button class="tab" data-view="guide"><span>📖</span>Guía</button>
+  </nav>
+
+  <div id="toast"></div>
+  <div id="modal" class="hidden"><div id="modal-body"></div></div>
+</div>
+
+<script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

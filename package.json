@@ -1,0 +1,16 @@
+{
+  "name": "navata",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Levantamiento topográfico de parcela: cotas, curvas de nivel, árboles y fotografías orientadas",
+  "scripts": {
+    "serve": "python3 -m http.server 8899",
+    "test": "node test/geom.test.mjs",
+    "test:e2e": "node test/e2e.mjs"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

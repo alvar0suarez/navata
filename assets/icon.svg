@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#12161c"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- curvas de nivel -->
+    <path d="M96 372c40-26 74-14 118-34s58-62 106-70 74 16 96 4" stroke="#2f5f7d" stroke-width="14"/>
+    <path d="M112 316c38-22 70-12 110-30s54-56 98-64 68 14 88 4" stroke="#3d7fa5" stroke-width="14"/>
+    <path d="M136 258c34-18 62-10 96-26s48-48 86-56 60 12 78 4" stroke="#4ea8de" stroke-width="14"/>
+    <path d="M168 200c28-14 50-8 78-22s40-40 70-46 50 10 64 4" stroke="#7cc4ec" stroke-width="14"/>
+    <path d="M204 146c22-10 38-6 60-16s30-30 54-36" stroke="#a9dcf5" stroke-width="14"/>
+  </g>
+  <!-- cota de referencia -->
+  <circle cx="150" cy="352" r="26" fill="#f0a35e"/>
+  <circle cx="150" cy="352" r="10" fill="#12161c"/>
+  <!-- árbol -->
+  <circle cx="372" cy="300" r="30" fill="#5ee1a0" opacity="0.9"/>
+  <rect x="366" y="318" width="12" height="42" rx="5" fill="#5ee1a0" opacity="0.55"/>
+</svg>
