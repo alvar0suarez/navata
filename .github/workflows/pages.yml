@@ -2,7 +2,9 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - claude/topographic-parcel-map-40w9na
   workflow_dispatch:
 
 permissions:
