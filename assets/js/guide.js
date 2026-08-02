@@ -42,6 +42,25 @@ export const GUIDE_HTML = `
   tramos con un jalón intermedio <em>alineado a ojo</em> entre las dos esquinas: mirando desde una
   esquina, el jalón debe tapar exactamente a la otra.
 </div>
+<div class="callout">
+  <strong>Si no vas a medir ninguna diagonal.</strong> La familia de formas compatible con cuatro
+  lados tiene un solo grado de libertad, así que <strong>un único dato extra la fija</strong>, y no
+  tiene por qué ser una diagonal: sirve una distancia cualquiera tomada mientras recorres la malla.
+  Al llegar a la valla en una fila cualquiera, lee lo que marca la cinta desde el eje Y y mételo en
+  <em>Datos ▸ ¿No vas a medir la diagonal?</em>. No te desvía del recorrido y determina la parcela
+  exactamente igual de bien.
+  <br><br>
+  Si tampoco haces eso, la app te enseña las dos hipótesis razonables —esquina a 90° y fondo
+  paralelo a la calle— con la superficie de cada una y cuánto difieren, y deja anotado en el
+  proyecto que el borde es provisional. En una parcela normal esas dos hipótesis se llevan
+  un 15 % de superficie: no es un detalle.
+</div>
+<div class="callout warn">
+  <strong>Las cotas no se pierden aunque el borde esté mal.</strong> Las coordenadas X e Y las
+  materializas tú con la cinta desde el origen, así que las cotas son válidas pase lo que pase con
+  la forma del contorno. Si más adelante mides la diagonal, vuelves a construir el borde y todo
+  encaja sin repetir una sola medida de altura.
+</div>
 <div class="callout warn">
   <strong>Escuadra sin escuadra.</strong> Para comprobar que X e Y son perpendiculares usa el 3-4-5:
   marca 3 m sobre un eje, 4 m sobre el otro; la diagonal entre ambas marcas debe medir exactamente 5 m.

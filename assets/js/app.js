@@ -4,8 +4,9 @@ import { $, $$, toast, download, fmtM, fmtZ, clamp, norm360, rad, uid, debounce,
 import { P, surface, stats, onChange, touch, addPoint, delPoint, addTree, delTree,
          delPhoto, makeGrid, makeRect, replaceProject, emptyProject } from './state.js';
 import { blobURL, blobs, clearProject } from './store.js';
-import { profileAlong, bbox, latLonToLocal, sampleSurface, distToSeg,
-         quadFromSides, quadFromSidesSquare } from './geom.js';
+import { profileAlong, bbox, latLonToLocal, sampleSurface, distToSeg, polyArea,
+         quadFromSides, quadFromSidesSquare, quadFromSidesTrapezoid,
+         quadFromSidesAndEdge, quadFlex } from './geom.js';
 import * as R from './render2d.js';
 import { draw3d, cam, setCamPreset } from './render3d.js';
 import { coverageGrid, suggestStation } from './coverage.js';
@@ -787,11 +788,15 @@ function applyQuad(res) {
   // El lado A (frente a la calle) es el que arranca en el origen.
   P.cur.streetEdge = P.cur.boundary.findIndex(v => Math.abs(v.x) < 1e-6 && Math.abs(v.y) < 1e-6);
   if (P.cur.streetEdge < 0) P.cur.streetEdge = 0;
+  // Queda registrado si el borde es medido o supuesto: dentro de un año nadie
+  // se acuerda de con qué hipótesis se dibujó.
+  P.cur.boundaryAssumed = res.assumption || null;
   touch();
   R.fitView(canvas);
 
   const st = stats();
   let msg = `Parcela cerrada: ${fmtM(st.area, 1)} m², perímetro ${fmtM(st.perim, 1)} m.`;
+  if (res.assumption) msg += ` Borde provisional (${res.assumption}).`;
   if (res.check !== null && res.check !== undefined) {
     const cm = Math.abs(res.check) * 100;
     const medida = parseFloat($('#tri-q').value);
@@ -810,14 +815,81 @@ function applyQuad(res) {
 const triVal = id => parseFloat($('#tri-' + id).value);
 
 $('#tri-build').addEventListener('click', () => {
-  applyQuad(quadFromSides(triVal('a'), triVal('b'), triVal('c'), triVal('d'), triVal('p'), triVal('q')));
+  const [a, b, c, d] = ['a', 'b', 'c', 'd'].map(triVal);
+  const p = triVal('p'), ey = triVal('ey'), ex = triVal('ex');
+  $('#tri-choice').classList.add('hidden');
+
+  if (Number.isFinite(p) && p > 0) {
+    applyQuad(quadFromSides(a, b, c, d, p, triVal('q')));
+    return;
+  }
+  if (Number.isFinite(ey) && Number.isFinite(ex)) {
+    const r = quadFromSidesAndEdge(a, b, c, d, ey, ex, $('#tri-eside').value);
+    if (r.ok) r.assumption = `ajustada con la valla ${$('#tri-eside').value === 'izq' ? 'izquierda' : 'derecha'} a ${fmtM(ey)} m de la calle`;
+    applyQuad(r);
+    return;
+  }
+  offerAssumptions(a, b, c, d);
 });
 
-$('#tri-square').addEventListener('click', () => {
-  if (!confirm('Sin diagonal hay que suponer que la esquina del origen está a escuadra.\n' +
-               'Una parcela real rara vez lo está: el plano puede salir deformado.\n\n¿Continuar?')) return;
-  applyQuad(quadFromSidesSquare(triVal('a'), triVal('b'), triVal('c'), triVal('d')));
-});
+/**
+ * Sin diagonal la forma queda indeterminada. En vez de elegir por él una
+ * suposición cualquiera, se le enseñan las dos razonables y cuánto difieren:
+ * ese número es la incertidumbre que está aceptando.
+ */
+function offerAssumptions(a, b, c, d) {
+  const info = $('#tri-info');
+  const sq = quadFromSidesSquare(a, b, c, d);
+  const tz = quadFromSidesTrapezoid(a, b, c, d);
+  const flex = quadFlex(a, b, c, d);
+
+  if (!sq.ok && !tz.ok) {
+    info.className = 'hint tri-bad';
+    info.textContent = sq.ok === false ? sq.error : tz.error;
+    return;
+  }
+
+  triCandidates = { square: sq, trap: tz };
+  const areaSq = sq.ok ? polyArea(sq.poly) : null;
+  const areaTz = tz.ok ? polyArea(tz.poly) : null;
+
+  $('#tri-opt-sq').textContent = areaSq !== null ? `${fmtM(areaSq, 1)} m²` : 'no cierra';
+  $('#tri-opt-tz').textContent = areaTz !== null ? `${fmtM(areaTz, 1)} m²` : 'no cierra';
+  $$('.tri-opt').forEach(b2 => {
+    const okThis = b2.dataset.assume === 'square' ? sq.ok : tz.ok;
+    b2.disabled = !okThis;
+    b2.style.opacity = okThis ? '' : '.4';
+  });
+
+  let msg = 'Sin diagonal, los cuatro lados no fijan la forma: el cuadrilátero sigue articulado. ';
+  if (areaSq !== null && areaTz !== null) {
+    const diff = Math.abs(areaSq - areaTz);
+    const pct = diff / Math.max(areaSq, areaTz) * 100;
+    const corner = Math.max(
+      Math.hypot(sq.poly[2].x - tz.poly[2].x, sq.poly[2].y - tz.poly[2].y),
+      Math.hypot(sq.poly[3].x - tz.poly[3].x, sq.poly[3].y - tz.poly[3].y));
+    msg += `Estas dos hipótesis, ambas razonables, difieren en ${fmtM(diff, 1)} m² (${fmtM(pct, 0)} %) ` +
+           `y las esquinas del fondo se separan ${fmtM(corner, 1)} m entre una y otra.`;
+  }
+  if (flex.ok) msg += ` El rango completo de formas posibles va de ${fmtM(flex.areaMin, 0)} a ${fmtM(flex.areaMax, 0)} m².`;
+  msg += ' Elige una para seguir; podrás corregirlo luego sin repetir ninguna cota.';
+
+  info.className = 'hint tri-warn';
+  info.textContent = msg;
+  $('#tri-choice').classList.remove('hidden');
+  // La salida buena —una sola distancia a la valla— no puede quedar escondida
+  // justo cuando es cuando hace falta.
+  $('#tri-alt').open = true;
+}
+
+let triCandidates = null;
+$$('.tri-opt').forEach(b => b.addEventListener('click', () => {
+  if (!triCandidates) return;
+  const r = b.dataset.assume === 'square' ? triCandidates.square : triCandidates.trap;
+  if (!r?.ok) return;
+  $('#tri-choice').classList.add('hidden');
+  applyQuad(r);
+}));
 
 $('#a-here').addEventListener('click', () => {
   if (!navigator.geolocation) { toast('Sin geolocalización'); return; }

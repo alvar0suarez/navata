@@ -322,11 +322,34 @@
             <label>P · diagonal desde el origen (m)<input type="number" step="0.01" id="tri-p" inputmode="decimal"></label>
             <label>Q · la otra diagonal (opcional)<input type="number" step="0.01" id="tri-q" inputmode="decimal"></label>
           </div>
+
+          <details id="tri-alt">
+            <summary>¿No vas a medir la diagonal? Abre esto</summary>
+            <p class="hint">Basta con <strong>una sola distancia tomada mientras recorres la malla</strong>:
+            al llegar a la valla en cualquier fila, lee lo que marca la cinta. Ese único dato fija la forma
+            igual de bien que la diagonal, y no te desvía del recorrido.</p>
+            <div class="row3">
+              <label>Fila · distancia a la calle (m)<input type="number" step="0.01" id="tri-ey" inputmode="decimal"></label>
+              <label>Cinta hasta la valla (m)<input type="number" step="0.01" id="tri-ex" inputmode="decimal"></label>
+              <label>Valla
+                <select id="tri-eside">
+                  <option value="der">Derecha</option>
+                  <option value="izq">Izquierda</option>
+                </select>
+              </label>
+            </div>
+          </details>
+
           <div class="btn-row">
             <button class="primary" id="tri-build">Construir parcela</button>
-            <button id="tri-square" class="ghost">Sin diagonal, a escuadra</button>
           </div>
           <div id="tri-info" class="hint"></div>
+          <div id="tri-choice" class="hidden">
+            <div class="tri-opts">
+              <button class="tri-opt" data-assume="square"><b id="tri-opt-sq"></b><span>Esquina de la calle a 90°</span></button>
+              <button class="tri-opt" data-assume="trap"><b id="tri-opt-tz"></b><span>Fondo paralelo a la calle</span></button>
+            </div>
+          </div>
           <div class="row2">
             <label>Fecha de visita<input type="date" id="d-visit"></label>
             <label>Notas de campo<input type="text" id="d-notes" placeholder="Datum: clavo en esquina SO, marca a 1,00 m"></label>

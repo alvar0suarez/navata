@@ -203,6 +203,15 @@ button.danger-ghost{background:transparent;border-color:transparent;color:var(--
 .qd-org{fill:var(--warn)}
 .tri-ok{color:var(--accent2)}
 .tri-bad{color:var(--danger)}
+.tri-warn{color:var(--warn)}
+#tri-alt{margin:8px 0;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--bg)}
+#tri-alt summary{font-size:13px;color:var(--accent2);cursor:pointer}
+#tri-choice.hidden{display:none}
+.tri-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.tri-opt{display:flex;flex-direction:column;gap:3px;padding:12px 10px;text-align:left;
+  background:var(--panel2);border:1px solid var(--warn);border-radius:10px}
+.tri-opt b{font-size:16px;color:var(--txt)}
+.tri-opt span{font-size:11px;color:var(--txt2)}
 
 /* ── llamada a la acción ── */
 .big-cta{

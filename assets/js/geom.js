@@ -154,8 +154,180 @@ export function quadFromSidesSquare(a, b, c, d) {
   const V0 = { x: 0, y: 0 }, V1 = { x: a, y: 0 }, V3 = { x: 0, y: d };
   const s = intersectCircles(V1, b, V3, c);
   if (!s) return { ok: false, error: 'Con la esquina a escuadra esos cuatro lados no cierran.' };
-  const V2 = s[0].x + s[0].y > s[1].x + s[1].y ? s[0] : s[1];
-  return { ok: true, poly: [V0, V1, V2, V3], check: null };
+  const V2 = s[0].y > s[1].y ? s[0] : s[1];
+  return { ok: true, poly: [V0, V1, V2, V3], check: null, assumption: 'escuadra' };
+}
+
+/**
+ * Variante sin diagonal: se supone el fondo paralelo a la calle (trapecio).
+ * Suele ajustar mejor que la escuadra en parcelas de una manzana, donde los
+ * fondos siguen la línea de la calle de detrás.
+ */
+export function quadFromSidesTrapezoid(a, b, c, d) {
+  for (const v of [a, b, c, d]) if (!Number.isFinite(v) || v <= 0)
+    return { ok: false, error: 'Faltan medidas o no son válidas.' };
+  if (Math.abs(c - a) < 1e-6) {
+    if (Math.abs(b - d) > 0.02)
+      return { ok: false, error: 'Si el fondo mide igual que el frente, el trapecio obliga a que los dos laterales sean iguales, y no lo son. Usa la escuadra o mide una diagonal.' };
+    // Paralelogramo: queda indeterminado, se recurre a la escuadra
+    return quadFromSidesSquare(a, b, c, d);
+  }
+  // V3 = (t, h) · V2 = (t + c, h) con el fondo paralelo al frente
+  const t = (b * b - d * d - (c - a) * (c - a)) / (2 * (c - a));
+  const h2 = d * d - t * t;
+  if (h2 <= 0) return { ok: false, error: 'Con el fondo paralelo a la calle esos cuatro lados no cierran.' };
+  const h = Math.sqrt(h2);
+  return {
+    ok: true,
+    poly: [{ x: 0, y: 0 }, { x: a, y: 0 }, { x: t + c, y: h }, { x: t, y: h }],
+    check: null, assumption: 'fondo paralelo',
+  };
+}
+
+/** ¿Se cortan los segmentos pq y rs? Usado para descartar polígonos cruzados. */
+function segsCross(p, q, r, s) {
+  const d1 = cross(r, s, p), d2 = cross(r, s, q);
+  const d3 = cross(p, q, r), d4 = cross(p, q, s);
+  return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0));
+}
+
+/**
+ * Cuadrilátero de la familia correspondiente a un ángulo θ en la esquina del
+ * origen (entre el frente A y el lateral D). Null si con ese ángulo no cierra
+ * o el polígono se cruza.
+ */
+export function quadAtTheta(a, b, c, d, theta) {
+  const V0 = { x: 0, y: 0 }, V1 = { x: a, y: 0 };
+  const V3 = { x: d * Math.cos(theta), y: d * Math.sin(theta) };
+  const sols = intersectCircles(V1, b, V3, c);
+  if (!sols) return null;
+  for (const V2 of [sols[0], sols[1]]) {
+    if (segsCross(V0, V1, V2, V3) || segsCross(V1, V2, V3, V0)) continue;
+    if (V2.y <= 0) continue;                       // la parcela crece hacia +Y
+    const poly = [V0, V1, V2, V3];
+    if (polyArea(poly) < 1e-6) continue;
+    return poly;
+  }
+  return null;
+}
+
+/**
+ * Determina la forma con los cuatro lados más UNA distancia medida sobre el
+ * terreno: al recorrer una fila de la malla, lo que mide la cinta desde el eje
+ * Y hasta la valla.
+ *
+ * Es el sustituto barato de la diagonal. La familia de cuadriláteros compatible
+ * con cuatro lados tiene un solo grado de libertad, así que un único dato extra
+ * basta para fijarla — y ese dato se toma sin desviarse del recorrido.
+ *
+ * @param {number} y   distancia desde la calle a la que se hizo la medida
+ * @param {number} x   distancia medida desde el eje Y hasta la valla
+ * @param {'izq'|'der'} side  valla medida
+ */
+export function quadFromSidesAndEdge(a, b, c, d, y, x, side) {
+  for (const v of [a, b, c, d, y, x]) if (!Number.isFinite(v))
+    return { ok: false, error: 'Faltan medidas o no son válidas.' };
+  if (y <= 0) return { ok: false, error: 'La distancia desde la calle debe ser mayor que cero.' };
+
+  // Corte de la fila `y` con el lateral elegido: izquierda = V3→V0, derecha = V1→V2
+  const crossing = poly => {
+    const [V0, V1, V2, V3] = poly;
+    const [p, q] = side === 'izq' ? [V3, V0] : [V1, V2];
+    if (Math.abs(q.y - p.y) < 1e-9) return null;
+    const t = (y - p.y) / (q.y - p.y);
+    if (t < -1e-6 || t > 1 + 1e-6) return null;    // la fila no corta ese lado
+    return p.x + (q.x - p.x) * t;
+  };
+
+  const err = th => {
+    const poly = quadAtTheta(a, b, c, d, th);
+    if (!poly) return null;
+    const cx = crossing(poly);
+    return cx === null ? null : Math.abs(cx - x);
+  };
+
+  // Barrido grueso y afinado local
+  let best = null;
+  const N = 1440;
+  for (let k = 1; k < N; k++) {
+    const th = Math.PI * k / N;
+    const e = err(th);
+    if (e !== null && (!best || e < best.e)) best = { th, e };
+  }
+  if (!best) return { ok: false, error: 'Ninguna forma compatible con esos lados alcanza esa medida. Repasa los números.' };
+
+  let step = Math.PI / N;
+  for (let it = 0; it < 60; it++) {
+    step /= 2;
+    for (const th of [best.th - step, best.th + step]) {
+      const e = err(th);
+      if (e !== null && e < best.e) best = { th, e };
+    }
+  }
+
+  if (best.e > 0.05) {
+    return { ok: false, error: `Con esos cuatro lados, lo más cerca que se llega de tu medida es ${(best.e * 100).toFixed(0)} cm. Alguna cinta no cuadra: repasa los lados o la distancia a la valla.` };
+  }
+  const poly = quadAtTheta(a, b, c, d, best.th);
+  if (!poly) return { ok: false, error: 'No se pudo cerrar la figura.' };
+  return { ok: true, poly, check: null, assumption: null, residual: best.e };
+}
+
+/**
+ * Recorre toda la familia de cuadriláteros compatibles con cuatro lados dados.
+ *
+ * Con los lados fijos el cuadrilátero sigue teniendo un grado de libertad: se
+ * abre y se cierra como una tijera. Barriendo el ángulo de la esquina del
+ * origen se obtiene el abanico completo de formas posibles, y con él una medida
+ * honesta de cuánta incertidumbre queda por no haber medido la diagonal.
+ *
+ * @returns {{ok:true, areaMin, areaMax, spread:number, diagMin, diagMax}|{ok:false, error}}
+ */
+export function quadFlex(a, b, c, d, samples = 720) {
+  for (const v of [a, b, c, d]) if (!Number.isFinite(v) || v <= 0)
+    return { ok: false, error: 'Faltan medidas.' };
+
+  let areaMin = Infinity, areaMax = -Infinity;
+  let diagMin = Infinity, diagMax = -Infinity;
+  const v2s = [], v3s = [];
+
+  for (let k = 1; k < samples; k++) {
+    const th = Math.PI * k / samples;
+    const V0 = { x: 0, y: 0 }, V1 = { x: a, y: 0 };
+    const V3 = { x: d * Math.cos(th), y: d * Math.sin(th) };
+    const sols = intersectCircles(V1, b, V3, c);
+    if (!sols) continue;
+
+    for (const V2 of sols) {
+      const poly = [V0, V1, V2, V3];
+      // descarta polígonos cruzados: los lados no contiguos no deben cortarse
+      if (segsCross(V0, V1, V2, V3) || segsCross(V1, V2, V3, V0)) continue;
+      const ar = polyArea(poly);
+      if (ar < 1e-6) continue;
+      const diag = Math.hypot(V2.x, V2.y);
+      if (ar < areaMin) areaMin = ar;
+      if (ar > areaMax) areaMax = ar;
+      if (diag < diagMin) diagMin = diag;
+      if (diag > diagMax) diagMax = diag;
+      v2s.push(V2); v3s.push(V3);
+    }
+  }
+  if (!v2s.length) return { ok: false, error: 'Esos cuatro lados no cierran ninguna figura.' };
+
+  // Cuánto puede desplazarse cada esquina del fondo entre los extremos
+  const spreadOf = arr => {
+    let m = 0;
+    for (let i = 0; i < arr.length; i++) {
+      m = Math.max(m, Math.hypot(arr[i].x - arr[0].x, arr[i].y - arr[0].y));
+      m = Math.max(m, Math.hypot(arr[i].x - arr[arr.length - 1].x, arr[i].y - arr[arr.length - 1].y));
+    }
+    return m;
+  };
+  return {
+    ok: true, areaMin, areaMax,
+    spread: Math.max(spreadOf(v2s), spreadOf(v3s)),
+    diagMin, diagMax,
+  };
 }
 
 /* ───────────────────── interpolación de superficie ───────────────────── */

@@ -128,5 +128,52 @@ import { quadFromSides, quadFromSidesSquare, polyArea as pa2 } from '../assets/j
      sq.ok ? pa2(sq.poly).toFixed(2)+' m²' : sq.error);
 }
 
+
+// ── solo cuatro lados: familia articulada ──
+import { quadFromSidesTrapezoid, quadFromSidesAndEdge, quadFlex, quadAtTheta } from '../assets/js/geom.js';
+
+{
+  const V = [{x:0,y:0},{x:16,y:0},{x:14,y:40},{x:2,y:38}];
+  const D = (i,j) => Math.hypot(V[i].x-V[j].x, V[i].y-V[j].y);
+  const [a,b,c,d] = [D(0,1), D(1,2), D(2,3), D(3,0)];
+  const areaReal = pa2(V);
+
+  const f = quadFlex(a,b,c,d);
+  ok('flex: la familia es amplia', f.ok && f.areaMax - f.areaMin > 100,
+     f.ok ? `${f.areaMin.toFixed(0)}–${f.areaMax.toFixed(0)} m²` : f.error);
+  ok('flex: el área real cae dentro', f.ok && areaReal >= f.areaMin - 1 && areaReal <= f.areaMax + 1,
+     areaReal.toFixed(1) + ' m²');
+
+  // Todos los miembros de la familia deben tener los lados pedidos
+  let maxSideErr = 0;
+  for (const th of [0.4, 0.8, 1.2, 1.6, 2.0]) {
+    const q = quadAtTheta(a,b,c,d,th);
+    if (!q) continue;
+    const s = [0,1,2,3].map(i => Math.hypot(q[(i+1)%4].x-q[i].x, q[(i+1)%4].y-q[i].y));
+    [a,b,c,d].forEach((v,i) => { maxSideErr = Math.max(maxSideErr, Math.abs(s[i]-v)); });
+  }
+  ok('flex: cada forma respeta los cuatro lados', maxSideErr < 1e-9, (maxSideErr*1000).toFixed(6)+' mm');
+
+  // Trapecio: el fondo debe salir paralelo al frente
+  const tz = quadFromSidesTrapezoid(a,b,c,d);
+  ok('trapecio: fondo paralelo a la calle', tz.ok && Math.abs(tz.poly[2].y - tz.poly[3].y) < 1e-9,
+     tz.ok ? 'Δy = '+Math.abs(tz.poly[2].y-tz.poly[3].y).toExponential(1) : tz.error);
+  ok('trapecio: lados correctos', tz.ok && [0,1,2,3].every((i) =>
+      Math.abs(Math.hypot(tz.poly[(i+1)%4].x-tz.poly[i].x, tz.poly[(i+1)%4].y-tz.poly[i].y) - [a,b,c,d][i]) < 1e-9));
+
+  // Una sola distancia a la valla determina la forma exacta
+  let worst = 0;
+  for (const [y,x,side] of [[19,1,'izq'],[38,2,'izq'],[20,15,'der'],[40,14,'der']]) {
+    const r = quadFromSidesAndEdge(a,b,c,d,y,x,side);
+    if (!r.ok) { worst = Infinity; break; }
+    for (let i=0;i<4;i++) worst = Math.max(worst, Math.hypot(r.poly[i].x-V[i].x, r.poly[i].y-V[i].y));
+  }
+  ok('valla: un solo dato recupera la forma exacta', worst < 0.005, (worst*1000).toFixed(2)+' mm');
+
+  // Y detecta medidas que no cuadran con ningún miembro de la familia
+  const imposible = quadFromSidesAndEdge(a,b,c,d,20,60,'der');
+  ok('valla: rechaza lo inalcanzable', !imposible.ok, imposible.ok ? 'la aceptó' : imposible.error.slice(0,50));
+}
+
 console.log(fails ? `\n${fails} PRUEBAS FALLIDAS` : '\nTodas las pruebas pasan');
 process.exit(fails ? 1 : 0);

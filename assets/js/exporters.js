@@ -411,6 +411,7 @@ RESUMEN
   Árboles ............... ${st.nTrees}
   Fotos ................. ${st.nPhotos}
   Anclaje geográfico .... ${p.anchor ? `${p.anchor.lat.toFixed(6)}, ${p.anchor.lon.toFixed(6)} (eje +Y a ${p.anchor.rot}° N)` : 'sin anclar (coordenadas locales)'}
+  Borde ................. ${p.boundaryAssumed ? `PROVISIONAL — ${p.boundaryAssumed}` : 'medido'}
   Notas ................. ${p.notes || '—'}
 
 CONTENIDO

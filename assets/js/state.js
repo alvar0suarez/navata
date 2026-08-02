@@ -19,6 +19,7 @@ export function emptyProject() {
     notes: '',
     anchor: null,                 // {lat, lon, rot}
     boundary: [],                 // [{x,y}]
+    boundaryAssumed: null,        // texto de la hipótesis si el borde no está medido del todo
     streetEdge: -1,               // índice de arista que da a la calle
     points: [],                   // {id,x,y,z,label,type,method,ts}
     pending: [],                  // estaciones de malla aún sin medir {id,x,y,label}
