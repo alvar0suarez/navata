@@ -7,7 +7,7 @@
   "scripts": {
     "serve": "python3 -m http.server 8899",
     "test": "node test/geom.test.mjs",
-    "test:e2e": "node test/e2e.mjs && node test/e2e-quick.mjs && node test/e2e-trilateracion.mjs && node test/e2e-cuatro-lados.mjs && node test/e2e-parcela.mjs && node test/e2e-procedimiento.mjs && node test/e2e-cuerda.mjs && node test/e2e-copias.mjs"
+    "test:e2e": "node test/run-e2e.mjs"
   },
   "license": "MIT",
   "devDependencies": {

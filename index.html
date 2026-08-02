@@ -436,6 +436,16 @@
           </div>
           <p class="hint">Todo se guarda en este dispositivo (funciona sin cobertura). Exporta el .json al terminar el día.</p>
         </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Versión</h2>
+            <span id="d-version" class="badge"></span>
+          </div>
+          <p class="hint">La app avisa sola cuando hay una versión nueva, siempre que tengas
+          cobertura. Actualizar no toca los datos medidos.</p>
+          <button id="d-check-update">Buscar actualización</button>
+        </div>
       </div>
     </section>
 
@@ -544,6 +554,12 @@
         <button id="cfg-ok" class="q-save" style="font-size:16px;padding:15px">Listo</button>
       </div>
     </div>
+  </div>
+
+  <div id="update-bar" class="hidden">
+    <div class="ub-txt"><b>Hay una versión nueva</b><small>Tus datos no se tocan</small></div>
+    <button id="update-later" class="ub-later">Ahora no</button>
+    <button id="update-go" class="ub-go">Actualizar</button>
   </div>
 
   <div id="toast"></div>

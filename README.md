@@ -56,6 +56,20 @@ La guía resumida está también dentro de la app, en la pestaña *Guía*.
 - **Rumbos de foto**: 0° = eje +Y local, creciendo en sentido horario. Con anclaje geográfico
   se convierten a rumbos respecto al norte.
 
+## Actualizaciones
+
+La app se instala en el móvil y se sirve desde caché, así que hay que avisar de forma
+explícita cuando cambia. El service worker **no** hace `skipWaiting` al instalarse: la
+versión nueva espera, la app muestra una barra *«Hay una versión nueva»* y solo se aplica
+al aceptar, recargando una única vez. Cambiar los módulos por debajo de una pantalla ya
+cargada dejaría la app a medias entre dos versiones, y midiendo en el campo eso no vale.
+
+Se comprueba al volver a la app y desde *Datos ▸ Versión ▸ Buscar actualización*.
+Actualizar no toca los datos medidos.
+
+Al publicar una versión hay que cambiar `VERSION` en `sw.js` y `APP_VERSION` en `app.js`,
+que deben coincidir.
+
 ## Copia de seguridad
 
 Los datos viven en el teléfono. En *Datos* hay una tarjeta arriba del todo:
@@ -95,8 +109,8 @@ python3 -m http.server 8000     # y abrir http://localhost:8000
 Comprobaciones:
 
 ```bash
-npm test          # geometría: interpolación, curvas de nivel, pendientes, geodesia
-npm run test:e2e  # recorrido completo en navegador (requiere Chromium y el servidor local)
+npm test          # geometría: 39 comprobaciones sin navegador
+npm run test:e2e  # 115 comprobaciones en Chromium; levanta el servidor él mismo
 ```
 
 ### Estructura

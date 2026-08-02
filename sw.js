@@ -2,7 +2,9 @@
 // Estrategia: la app se precarga en la instalación y luego se sirve desde caché,
 // refrescándose en segundo plano cuando hay red (stale-while-revalidate).
 
-const CACHE = 'navata-v3';
+// Al cambiar esta versión hay que cambiar también APP_VERSION en app.js.
+const VERSION = '2026.08.02-4';
+const CACHE = 'navata-' + VERSION;
 
 const ASSETS = [
   './',
@@ -27,10 +29,12 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
+  // Sin skipWaiting: la versión nueva espera a que el usuario acepte. Cambiar
+  // los módulos por debajo de una pantalla ya cargada deja la app a medias
+  // entre dos versiones, y eso midiendo en el campo no es aceptable.
   e.waitUntil(
     caches.open(CACHE)
       .then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' }))))
-      .then(() => self.skipWaiting())
       .catch(err => console.warn('precarga incompleta', err))
   );
 });
@@ -41,6 +45,12 @@ self.addEventListener('activate', e => {
       .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+// La página pide el relevo cuando el usuario acepta actualizar
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
+  if (e.data === 'VERSION') e.source?.postMessage({ version: VERSION });
 });
 
 self.addEventListener('fetch', e => {

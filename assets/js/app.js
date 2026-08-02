@@ -1228,13 +1228,72 @@ R.fitView(canvas);
 requestDraw();
 renderPhotos();
 
-// Service worker: la app debe funcionar en la parcela sin cobertura.
-// La ruta se resuelve contra el documento, así funciona igual en la raíz del
-// dominio que bajo un subdirectorio de GitHub Pages.
+/* ═══════════════════ actualizaciones ═══════════════════
+   La app se instala en el móvil y se sirve desde caché, así que sin esto una
+   versión nueva podía tardar días en aparecer, o peor: quedarse a medias entre
+   dos. Aquí se detecta, se avisa y se aplica cuando el usuario lo acepta. */
+
+// Debe coincidir con VERSION en sw.js
+const APP_VERSION = '2026.08.02-4';
+
+let swReg = null;
+let recargando = false;
+
+function mostrarActualizacion(worker) {
+  const el = $('#update-bar');
+  el.classList.remove('hidden');
+  $('#update-go').onclick = () => {
+    $('#update-go').textContent = 'Actualizando…';
+    worker.postMessage('SKIP_WAITING');
+  };
+  $('#update-later').onclick = () => el.classList.add('hidden');
+}
+
+async function buscarActualizacion(avisarSiNoHay = false) {
+  if (!swReg) { if (avisarSiNoHay) toast('Sin service worker: recarga la página'); return; }
+  try {
+    await swReg.update();
+    if (swReg.waiting) { mostrarActualizacion(swReg.waiting); return; }
+    if (avisarSiNoHay) toast(`Ya tienes la última versión (${APP_VERSION})`);
+  } catch {
+    if (avisarSiNoHay) toast('No se pudo comprobar: ¿estás sin cobertura?');
+  }
+}
+
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register(new URL('sw.js', document.baseURI))
-      .catch(err => console.warn('SW no registrado:', err));
+  // La ruta se resuelve contra el documento, así funciona igual en la raíz del
+  // dominio que bajo un subdirectorio de GitHub Pages.
+  navigator.serviceWorker.register(new URL('sw.js', document.baseURI))
+    .then(reg => {
+      swReg = reg;
+      if (reg.waiting && navigator.serviceWorker.controller) mostrarActualizacion(reg.waiting);
+      reg.addEventListener('updatefound', () => {
+        const nuevo = reg.installing;
+        if (!nuevo) return;
+        nuevo.addEventListener('statechange', () => {
+          // Solo se avisa si ya había una versión corriendo: en la primera
+          // instalación no hay nada que actualizar.
+          if (nuevo.state === 'installed' && navigator.serviceWorker.controller) mostrarActualizacion(nuevo);
+        });
+      });
+    })
+    .catch(err => console.warn('SW no registrado:', err));
+
+  // Cuando el trabajador nuevo toma el control, se recarga una sola vez
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (recargando) return;
+    recargando = true;
+    location.reload();
+  });
+
+  // Al volver a la app se mira si hay algo nuevo, sin molestar si no lo hay
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') buscarActualizacion(false);
   });
 }
+
+$('#d-version').textContent = APP_VERSION;
+$('#d-check-update').addEventListener('click', () => {
+  toast('Comprobando…');
+  buscarActualizacion(true);
+});
