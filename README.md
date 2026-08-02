@@ -7,13 +7,11 @@ Está pensada para usarse **en el campo, desde el móvil y sin cobertura**: se i
 app (PWA), todo se guarda en el propio dispositivo y al terminar se exporta a los formatos
 que entienden Google Earth, QGIS, AutoCAD, SketchUp o Blender.
 
-👉 **[Abrir la aplicación](https://alvar0suarez.github.io/navata/)**
-> ⚠️ Para que esa dirección funcione hay que activar Pages una vez a mano:
-> **Settings → Pages → Source: _GitHub Actions_**. El flujo de despliegue no puede
-> hacerlo solo: el `GITHUB_TOKEN` de Actions no tiene permiso para crear el sitio
-> (`Resource not accessible by integration`). A partir de ahí cada push despliega solo.
->
-> Mientras tanto, la app se puede usar en local con `npm run serve`.
+👉 **[Abrir la aplicación](https://alvar0suarez.github.io/navata/)** ·
+📄 **[Material y procedimiento](https://alvar0suarez.github.io/navata/procedimiento.html)**
+
+Ábrela en el móvil y añádela a la pantalla de inicio: se precarga entera y funciona
+sin cobertura. Hazlo **con conexión, antes de ir a la parcela**.
 
 ---
 
@@ -24,8 +22,8 @@ que entienden Google Earth, QGIS, AutoCAD, SketchUp o Blender.
 | **Curvas de nivel** | Interpola las cotas medidas con un *spline de placa delgada* y dibuja las curvas al intervalo que elijas (10 cm por defecto), con curvas maestras acotadas cada 5. |
 | **Relieve** | Mapa hipsométrico en color, sombreado analítico y mapa de pendientes en %. |
 | **Perfiles** | Traza una línea sobre el plano y obtén la sección con desnivel y pendiente. |
-| **Malla de estaciones** | Genera el recorrido de medición en serpiente y te va marcando la siguiente estación pendiente. |
-| **Medición rápida** | Pantalla completa con teclado grande: tecleas la lectura de la mira, la app calcula la cota, la asigna a la estación y salta a la siguiente. Mantiene la pantalla encendida. |
+| **Malla de estaciones** | Genera el recorrido —por líneas a lo largo o en serpiente a lo ancho— y te va marcando la siguiente estación pendiente. |
+| **Medición rápida** | Pantalla completa con teclado grande: tecleas la caída de la cuerda o la lectura de la mira, la app calcula la cota —corrigiendo la flecha de la cuerda—, la asigna a la estación y salta a la siguiente. Mantiene la pantalla encendida. |
 | **Árboles** | Posición, especie, diámetro de tronco y copa, altura y estado. |
 | **Fotos orientadas** | Cada foto guarda desde dónde y hacia dónde se tomó; se dibujan como conos sobre el plano. |
 | **Cobertura fotográfica** | Porcentaje de la parcela que ha entrado en el encuadre de alguna foto, y sugerencia de dónde colocarse para cubrir lo que falta. |
@@ -35,17 +33,18 @@ que entienden Google Earth, QGIS, AutoCAD, SketchUp o Blender.
 ## Cómo se mide
 
 📄 **[Lista de la compra y procedimiento paso a paso](https://alvar0suarez.github.io/navata/procedimiento.html)**
-— página aparte e imprimible: qué comprar, cuánto cuesta y cómo medir las 45 cotas sin ayuda.
+— página aparte e imprimible: qué comprar, cuánto cuesta y cómo medir las 48 cotas sin ayuda.
+La guía resumida está también dentro de la app, en la pestaña *Guía*.
 
-La guía resumida está también **dentro de la app**, en la pestaña *Guía*:
-
-- **Nivel de manguera** (una manguera transparente de 25 m llena de agua, ~12 €): precisión
-  de ±5–10 mm, muy por debajo del objetivo de ±5 cm. El agua en un tubo abierto por los dos
-  extremos define un plano horizontal perfecto.
-- **Malla de 4 × 4 m** para la primera visita: unas 60 estaciones en una parcela de 16 × 44 m,
-  entre hora y media y dos horas. Una malla de 1 × 1 m serían 704 puntos y dos días de trabajo,
-  con una precisión que no se aprovecha.
-- **Puntos de quiebre**: esquinas, bordillo, taludes, vaguadas, base de los árboles y arquetas.
+- **Primer día, nivel de agua.** Una manguera transparente de 40 m con el extremo fijo dentro
+  de una garrafa de 5 L: la garrafa hace de depósito, así la referencia no se mueve y se puede
+  trabajar solo. Precisión ±5–10 mm.
+- **Después, cuerda nivelada.** Se tiende hilo a lo largo de la parcela y se mide la caída al
+  suelo cada 5 m; los palos se mueven 3 m y se repite. Seis tendidos, 48 estaciones.
+- **Cuidado con la flecha.** Una cuerda de obra sobre 32 m pandea 7,7 cm en el centro, más que
+  todo el margen de error. Se arregla con hilo de nylon de 1,5 mm, partiendo el tendido, o
+  dejando que la app reste la parábola.
+- **Puntos de quiebre**: bordillo, taludes, vaguadas, base de los árboles y arquetas.
   Diez de estos valen más que cien puntos de malla.
 
 ## Sistema de coordenadas
@@ -116,6 +115,7 @@ assets/js/
   exporters.js          CSV, GeoJSON, KML, DXF, SVG, OBJ, ZIP
   zip.js                escritor ZIP sin dependencias
   guide.js              metodología de campo
+procedimiento.html      material y procedimiento, imprimible
 ```
 
 ## La parcela
@@ -123,8 +123,8 @@ assets/js/
 **15,50 m de frente a la calle × 32 m de fondo — 496 m², 95 m de perímetro.**
 
 El proyecto arranca con ese borde ya creado, así que al abrir la app en la parcela
-solo hay que generar la malla y empezar a medir. Con paso de 4 × 4 m salen
-**45 estaciones**, algo más de una hora con el nivel de manguera.
+solo hay que generar la malla y empezar a medir. Con líneas cada 3 m y puntos cada 5 m
+salen **48 estaciones en seis tendidos**, algo más de una hora.
 
 Está registrado como rectángulo porque es lo que se midió. Si las esquinas no
 resultan estar a escuadra, se corrigen arrastrando los vértices con la herramienta ⬡
