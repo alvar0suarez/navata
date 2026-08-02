@@ -64,6 +64,56 @@ export function clearProject() {
   localStorage.removeItem(LS_KEY);
 }
 
+/* ── copias automáticas ─────────────────────────────────────────────────
+   Una jornada de campo no se puede repetir. Se guardan las últimas ocho
+   instantáneas del proyecto para poder volver atrás si algo se borra por
+   error, y son independientes del fichero que se exporte a mano.          */
+
+const SNAP_KEY = 'navata.snapshots.v1';
+const MAX_SNAPS = 8;
+const SNAP_EVERY_MS = 4 * 60 * 1000;
+
+export function listSnapshots() {
+  try { return JSON.parse(localStorage.getItem(SNAP_KEY) || '[]'); } catch { return []; }
+}
+
+/**
+ * Guarda una instantánea si ha pasado tiempo suficiente desde la anterior o si
+ * el número de cotas ha cambiado de forma apreciable. `force` la guarda siempre.
+ */
+export function pushSnapshot(project, force = false) {
+  try {
+    const snaps = listSnapshots();
+    const last = snaps[0];
+    const n = (project.points || []).length;
+    const ahora = Date.now();
+    if (!force && last) {
+      const dt = ahora - (last.t || 0);
+      if (dt < SNAP_EVERY_MS && Math.abs(n - last.nPoints) < 5) return false;
+      if (n === last.nPoints && dt < SNAP_EVERY_MS) return false;
+    }
+    snaps.unshift({
+      t: ahora,
+      nPoints: n,
+      nTrees: (project.trees || []).length,
+      nPhotos: (project.photos || []).length,
+      data: JSON.stringify(project),
+    });
+    // Si no cabe, se van soltando las más viejas antes que fallar
+    for (let keep = Math.min(snaps.length, MAX_SNAPS); keep >= 1; keep--) {
+      try {
+        localStorage.setItem(SNAP_KEY, JSON.stringify(snaps.slice(0, keep)));
+        return true;
+      } catch { /* cuota llena: probar con menos */ }
+    }
+    return false;
+  } catch { return false; }
+}
+
+export function clearSnapshots() {
+  localStorage.removeItem(SNAP_KEY);
+}
+
 /* ── caché de object URLs para miniaturas ── */
 const urlCache = new Map();
 

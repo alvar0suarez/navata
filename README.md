@@ -56,6 +56,21 @@ La guía resumida está también **dentro de la app**, en la pestaña *Guía*:
 - **Rumbos de foto**: 0° = eje +Y local, creciendo en sentido horario. Con anclaje geográfico
   se convierten a rumbos respecto al norte.
 
+## Copia de seguridad
+
+Los datos viven en el teléfono. En *Datos* hay una tarjeta arriba del todo:
+
+- **Guardar copia (.json)** — lleva el borde, la malla pendiente con la posición de cada
+  estación en su tendido, todas las alturas medidas y los ajustes de medición.
+- **Cargar copia** — enseña primero qué trae el fichero frente a lo que ya hay en el
+  teléfono, y deja elegir entre **sustituir** o **combinar**. Combinar une dos jornadas o
+  dos teléfonos sin pisar nada: ante un choque manda lo que ya estaba, y las estaciones que
+  quedan medidas salen de la cola de pendientes.
+- **Copias automáticas** — las últimas ocho instantáneas quedan guardadas en el propio
+  teléfono, por si algo se borra sin querer. Son independientes del .json que exportes.
+
+Las fotografías no caben en el .json; para llevárselas hay que exportar el `.zip`.
+
 ## Exportación
 
 | Formato | Para |

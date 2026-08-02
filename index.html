@@ -272,6 +272,24 @@
     <section class="view" id="view-data">
       <div class="scroll">
         <div class="card">
+          <div class="card-head">
+            <h2>Copia de seguridad</h2>
+            <span id="bk-state" class="badge"></span>
+          </div>
+          <p class="hint">Los datos viven solo en este teléfono. Guarda el .json al terminar cada
+          jornada: lleva el borde, la malla pendiente y todas las alturas medidas.</p>
+          <div class="btn-row">
+            <button class="primary" id="bk-save">⬇ Guardar copia (.json)</button>
+            <label class="filebtn" id="bk-load-label">⬆ Cargar copia
+              <input type="file" id="bk-load" accept=".json,application/json" hidden></label>
+          </div>
+          <details id="bk-auto">
+            <summary>Copias automáticas guardadas en el teléfono</summary>
+            <div id="bk-list" class="list" style="margin-top:8px"></div>
+          </details>
+        </div>
+
+        <div class="card">
           <h2>Parcela</h2>
           <div class="row2">
             <label>Nombre<input type="text" id="d-name" placeholder="La Navata"></label>

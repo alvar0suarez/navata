@@ -2,8 +2,9 @@
 
 import { $, $$, toast, download, fmtM, fmtZ, clamp, norm360, rad, uid, debounce, today } from './util.js';
 import { P, surface, stats, onChange, touch, addPoint, delPoint, addTree, delTree,
-         delPhoto, makeGrid, makeRect, replaceProject, emptyProject } from './state.js';
-import { blobURL, blobs, clearProject } from './store.js';
+         delPhoto, makeGrid, makeRect, replaceProject, emptyProject,
+         mergeProject, describeProject } from './state.js';
+import { blobURL, blobs, clearProject, listSnapshots, clearSnapshots } from './store.js';
 import { profileAlong, bbox, latLonToLocal, sampleSurface, distToSeg, polyArea,
          quadFromSides, quadFromSidesSquare, quadFromSidesTrapezoid,
          quadFromSidesAndEdge, quadFlex } from './geom.js';
@@ -41,7 +42,7 @@ function setView(v) {
   if (v === 'map') requestDraw();
   if (v === '3d') draw3dSafe();
   if (v === 'photos') renderPhotos();
-  if (v === 'data') fillDataForm();
+  if (v === 'data') { fillDataForm(); renderSnapshots(); }
 }
 
 /* ═══════════════════ dibujo del mapa ═══════════════════ */
@@ -955,25 +956,123 @@ $$('.export-grid button').forEach(b => b.addEventListener('click', async () => {
   }
 }));
 
-$('#d-import').addEventListener('change', async e => {
-  const f = e.target.files[0];
-  if (!f) return;
-  try {
-    const p = JSON.parse(await f.text());
-    if (!p || !Array.isArray(p.points)) throw new Error('No parece un proyecto de Navata');
-    if (!confirm('Se sustituirá el proyecto actual. ¿Continuar?')) return;
-    replaceProject(p);
-    R.fitView(canvas);
-    toast('Proyecto cargado');
-    setView('map');
-  } catch (err) { toast('Error: ' + err.message); }
-  e.target.value = '';
+/* ── copia de seguridad ── */
+
+$('#bk-save').addEventListener('click', () => {
+  download(`${EX.fileBase()}.json`, EX.toJSON(), 'application/json');
+  const st = stats();
+  $('#bk-state').textContent = `${st.nPoints} cotas guardadas`;
+  toast('Copia guardada en Descargas');
 });
+
+/**
+ * Carga un .json. En vez de machacar sin más, enseña qué trae el fichero y deja
+ * elegir entre sustituir o combinar: una jornada de campo no se puede repetir.
+ */
+async function handleImport(file) {
+  let p;
+  try {
+    p = JSON.parse(await file.text());
+    if (!p || !Array.isArray(p.points)) throw new Error('No parece un proyecto de Navata');
+  } catch (err) { toast('Error: ' + err.message); return; }
+
+  const inc = describeProject(p);
+  const act = stats();
+  const fila = (k, a, b) => `<tr><td>${k}</td><td class="n">${a}</td><td class="n">${b}</td></tr>`;
+
+  $('#modal-body').innerHTML = `
+    <h2 style="margin:0 0 4px;font-size:15px">${escapeHTML(inc.name)}</h2>
+    <p class="hint" style="margin:0 0 12px">Visita del ${escapeHTML(inc.visitDate)}${
+      inc.updatedAt ? ` · guardado el ${new Date(inc.updatedAt).toLocaleString('es-ES')}` : ''}</p>
+    <table class="cmp">
+      <thead><tr><th></th><th class="n">En el fichero</th><th class="n">Ahora aquí</th></tr></thead>
+      <tbody>
+        ${fila('Cotas medidas', inc.nPoints, act.nPoints)}
+        ${fila('Estaciones pendientes', inc.nPending, act.nPending)}
+        ${fila('Árboles', inc.nTrees, act.nTrees)}
+        ${fila('Fotos', inc.nPhotos, act.nPhotos)}
+        ${fila('Desnivel', fmtM(inc.drop, 2) + ' m', fmtM(act.drop, 2) + ' m')}
+        ${fila('Superficie', fmtM(inc.area, 1) + ' m²', fmtM(act.area, 1) + ' m²')}
+      </tbody>
+    </table>
+    ${inc.nPhotos ? '<p class="hint">Las fotografías no viajan dentro del .json. Si cargas este fichero en otro teléfono, sus fotos aparecerán sin imagen.</p>' : ''}
+    <div class="btn-row" style="margin-top:14px">
+      <button id="imp-merge" class="primary">Combinar con lo que hay</button>
+      <button id="imp-replace" class="danger">Sustituir todo</button>
+    </div>
+    <div class="btn-row"><button id="imp-cancel" class="ghost">Cancelar</button></div>`;
+  $('#modal').classList.remove('hidden');
+
+  const cerrar = () => $('#modal').classList.add('hidden');
+  $('#imp-cancel').addEventListener('click', cerrar);
+
+  $('#imp-merge').addEventListener('click', () => {
+    const r = mergeProject(p);
+    cerrar();
+    R.fitView(canvas);
+    setView('map');
+    toast(`Combinado: ${r.cotas} cotas nuevas` +
+      (r.descartadas ? `, ${r.descartadas} ya estaban` : '') +
+      (r.arboles ? `, ${r.arboles} árboles` : ''));
+  });
+
+  $('#imp-replace').addEventListener('click', () => {
+    if (!confirm('Se perderá todo lo medido en este teléfono. ¿Seguro?')) return;
+    replaceProject(p);
+    cerrar();
+    R.fitView(canvas);
+    setView('map');
+    toast('Proyecto sustituido');
+  });
+}
+
+for (const sel of ['#bk-load', '#d-import']) {
+  $(sel).addEventListener('change', async e => {
+    if (e.target.files[0]) await handleImport(e.target.files[0]);
+    e.target.value = '';
+  });
+}
+
+/* ── copias automáticas ── */
+
+function renderSnapshots() {
+  const snaps = listSnapshots();
+  const el = $('#bk-list');
+  $('#bk-state').textContent = snaps.length ? `${snaps.length} copias autom.` : 'sin copias';
+  if (!snaps.length) {
+    el.innerHTML = '<div class="empty">Se irán guardando solas conforme midas.</div>';
+    return;
+  }
+  el.innerHTML = snaps.map((s, i) => `
+    <div class="list-item">
+      <div class="li-main">
+        <div class="li-title">${new Date(s.t).toLocaleString('es-ES')}</div>
+        <div class="li-sub">${s.nPoints} cotas · ${s.nTrees} árboles · ${s.nPhotos} fotos</div>
+      </div>
+      <button class="li-act" data-snap="${i}">Restaurar</button>
+    </div>`).join('');
+
+  el.querySelectorAll('[data-snap]').forEach(b => b.addEventListener('click', () => {
+    const s = listSnapshots()[+b.dataset.snap];
+    if (!s) return;
+    if (!confirm(`Volver al estado del ${new Date(s.t).toLocaleString('es-ES')} (${s.nPoints} cotas).\n` +
+                 'Lo medido después se perderá. ¿Seguro?')) return;
+    try {
+      replaceProject(JSON.parse(s.data));
+      R.fitView(canvas);
+      setView('map');
+      toast('Copia restaurada');
+    } catch { toast('Esa copia está dañada'); }
+  }));
+}
+
+$('#bk-auto').addEventListener('toggle', () => { if ($('#bk-auto').open) renderSnapshots(); });
 
 $('#d-reset').addEventListener('click', async () => {
   if (!confirm('Se borrarán todas las cotas, árboles y fotos de este dispositivo. ¿Seguro?')) return;
   await blobs.clear().catch(() => {});
   clearProject();
+  clearSnapshots();
   replaceProject(emptyProject());
   R.fitView(canvas);
   toast('Proyecto nuevo');

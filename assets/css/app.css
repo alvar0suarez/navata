@@ -341,3 +341,12 @@ body.quick-open{overflow:hidden}
 /* La flecha de la cuerda sin calibrar es un error sistemático de varios
    centímetros: mientras no se corrija, la línea de estado lo avisa. */
 .q-ref.warn{border-color:var(--warn);color:var(--warn)}
+
+/* Comparación entre lo que trae un fichero y lo que ya hay en el teléfono */
+table.cmp{width:100%;border-collapse:collapse;font-size:13px}
+table.cmp th,table.cmp td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}
+table.cmp th{color:var(--txt2);font-size:11.5px;font-weight:600}
+table.cmp .n{text-align:right;font-variant-numeric:tabular-nums}
+table.cmp tbody td:nth-child(2){color:var(--accent2);font-weight:650}
+#bk-auto{margin-top:10px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--bg)}
+#bk-auto summary{font-size:12.5px;color:var(--txt2);cursor:pointer}

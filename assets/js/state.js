@@ -1,7 +1,7 @@
 // state.js — modelo de datos del proyecto y superficie derivada (con caché).
 
 import { uid, today, debounce } from './util.js';
-import { loadProject, saveProject, blobs } from './store.js';
+import { loadProject, saveProject, blobs, pushSnapshot } from './store.js';
 import { buildSurface, smoothSurface, contours, bbox, polyArea, polyPerimeter,
          pointInPoly, distToPoly } from './geom.js';
 
@@ -78,6 +78,7 @@ export const onChange = fn => { listeners.add(fn); return () => listeners.delete
 const persist = debounce(() => {
   P.cur.updatedAt = new Date().toISOString();
   const ok = saveProject(P.cur);
+  pushSnapshot(P.cur);
   document.querySelector('#save-state')?.classList.remove('busy');
   if (!ok) console.warn('almacenamiento lleno');
 }, 400);
@@ -91,11 +92,83 @@ export function touch(hard = true) {
 }
 
 export function replaceProject(p) {
+  P.cur = normalize(p);
+  touch();
+}
+
+/** Rellena los campos que falten para que un proyecto de otra versión encaje. */
+function normalize(p) {
   const d = emptyProject();
   for (const k of Object.keys(d)) if (p[k] === undefined) p[k] = d[k];
   p.settings = Object.assign({}, d.settings, p.settings);
-  P.cur = p;
+  return p;
+}
+
+/** Resumen de un proyecto, para enseñar qué trae un fichero antes de cargarlo. */
+export function describeProject(p) {
+  const zs = (p.points || []).filter(q => Number.isFinite(q.z)).map(q => q.z);
+  return {
+    name: p.name || 'sin nombre',
+    visitDate: p.visitDate || '—',
+    updatedAt: p.updatedAt || null,
+    nPoints: (p.points || []).length,
+    nPending: (p.pending || []).length,
+    nTrees: (p.trees || []).length,
+    nPhotos: (p.photos || []).length,
+    drop: zs.length ? Math.max(...zs) - Math.min(...zs) : 0,
+    area: (p.boundary || []).length >= 3 ? polyArea(p.boundary) : 0,
+  };
+}
+
+/**
+ * Combina un proyecto importado con el actual en vez de sustituirlo.
+ *
+ * Sirve para juntar dos jornadas o dos teléfonos: las cotas del fichero se
+ * añaden a las que ya hay, y las estaciones que resulten medidas se retiran de
+ * la cola de pendientes. Nada se pisa: ante un choque, manda lo que ya estaba.
+ *
+ * @returns {{cotas:number, arboles:number, fotos:number, descartadas:number}}
+ */
+export function mergeProject(inc) {
+  const p = P.cur;
+  const q = normalize(structuredClone(inc));
+  const res = { cotas: 0, arboles: 0, fotos: 0, descartadas: 0 };
+
+  const yaEsta = (arr, o, dist) =>
+    arr.some(a => a.id === o.id || Math.hypot(a.x - o.x, a.y - o.y) < dist);
+
+  for (const pt of q.points) {
+    if (yaEsta(p.points, pt, 0.3)) { res.descartadas++; continue; }
+    // Etiqueta única: dos jornadas pueden traer ambas un "M7"
+    let label = pt.label;
+    if (p.points.some(a => a.label === label)) label = nextLabel(p.points, 'I');
+    p.points.push({ ...pt, label });
+    res.cotas++;
+  }
+  for (const t of q.trees) {
+    if (yaEsta(p.trees, t, 0.5)) continue;
+    p.trees.push({ ...t, label: p.trees.some(a => a.label === t.label) ? nextLabel(p.trees, 'A') : t.label });
+    res.arboles++;
+  }
+  for (const f of q.photos) {
+    if (p.photos.some(a => a.id === f.id)) continue;
+    p.photos.push(f);
+    res.fotos++;
+  }
+
+  // Si aquí no había malla, se adopta la del fichero
+  if (!p.pending.length && q.pending.length) p.pending = q.pending;
+  // Y se retiran las estaciones que hayan quedado medidas
+  const tol = Math.min(p.settings.gridDx || 3, p.settings.gridDy || 5) * 0.4;
+  p.pending = p.pending.filter(st => !p.points.some(pt => Math.hypot(pt.x - st.x, pt.y - st.y) < tol));
+
+  if (p.boundary.length < 3 && q.boundary.length >= 3) {
+    p.boundary = q.boundary;
+    p.streetEdge = q.streetEdge;
+    p.boundaryAssumed = q.boundaryAssumed;
+  }
   touch();
+  return res;
 }
 
 /* ────────────────── superficie derivada, con caché ────────────────── */
