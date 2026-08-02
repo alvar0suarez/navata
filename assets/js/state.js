@@ -180,16 +180,22 @@ export function makeGrid(dx, dy, order = 'boustro') {
   // Tolerancia hacia dentro: acepta también puntos justo sobre el borde.
   const inPoly = (x, y) => pointInPoly(x, y, p.boundary) || distToPoly(x, y, p.boundary) < 0.02;
 
+  // Posiciones de cada eje. Si el último paso no llega al borde se añade el
+  // borde mismo: sin esa columna, toda la franja del lado largo quedaría sin
+  // medir y las curvas de nivel ahí serían pura extrapolación.
+  const axis = (min, max, step) => {
+    const out = [];
+    for (let v = min; v <= max + 1e-9; v += step) out.push(v);
+    if (max - out[out.length - 1] > step * 0.25) out.push(max);
+    return out;
+  };
+  const xs = axis(bb.x0, bb.x1, dx);
+  const ys = axis(bb.y0, bb.y1, dy);
+
   const rows = [];
-  const nY = Math.floor(bb.h / dy);
-  for (let j = 0; j <= nY; j++) {
-    const y = bb.y0 + j * dy;
+  for (let j = 0; j < ys.length; j++) {
     const row = [];
-    const nX = Math.floor(bb.w / dx);
-    for (let i = 0; i <= nX; i++) {
-      const x = bb.x0 + i * dx;
-      if (inPoly(x, y)) row.push({ x, y });
-    }
+    for (const x of xs) if (inPoly(x, ys[j])) row.push({ x, y: ys[j] });
     if (order === 'boustro' && j % 2 === 1) row.reverse();
     rows.push(row);
   }

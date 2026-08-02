@@ -66,6 +66,8 @@
     <!-- ══════════════════ COTAS ══════════════════ -->
     <section class="view" id="view-points">
       <div class="scroll">
+        <button id="open-quick" class="big-cta">⚡ Modo medición rápida<small>Pantalla completa, teclado grande, a una mano</small></button>
+
         <div class="card">
           <h2>Añadir cota rápida</h2>
           <p class="hint">Modo campo: introduce X, Y y la lectura. La app calcula la altura relativa al punto de referencia (0,000&nbsp;m).</p>
@@ -350,6 +352,34 @@
     <button class="tab" data-view="data"><span>💾</span>Datos</button>
     <button class="tab" data-view="guide"><span>📖</span>Guía</button>
   </nav>
+
+  <!-- ══════════════════ MEDICIÓN RÁPIDA ══════════════════ -->
+  <div id="quick" class="hidden">
+    <div class="q-head">
+      <button id="q-close" class="q-chip">✕</button>
+      <div class="q-title"><b id="q-station">—</b><span id="q-progress"></span></div>
+      <button id="q-mode" class="q-chip">Lectura</button>
+    </div>
+
+    <div class="q-xy" id="q-xy"></div>
+    <div class="q-next" id="q-next"></div>
+
+    <div class="q-screen">
+      <div class="q-buffer"><span id="q-buffer">—</span><small id="q-unit"></small></div>
+      <div class="q-result"><span id="q-result">—</span><small>cota resultante</small></div>
+      <button class="q-ref" id="q-ref"></button>
+    </div>
+
+    <div id="q-pad"></div>
+
+    <div class="q-actions">
+      <button id="q-sign" class="q-alt">±</button>
+      <button id="q-break" class="q-alt">Quiebre</button>
+      <button id="q-skip" class="q-alt">Saltar</button>
+      <button id="q-undo" class="q-alt">Deshacer</button>
+    </div>
+    <button id="q-save" class="q-save">Guardar y siguiente ▸</button>
+  </div>
 
   <div id="toast"></div>
   <div id="modal" class="hidden"><div id="modal-body"></div></div>

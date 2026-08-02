@@ -11,6 +11,7 @@ import { coverageGrid, suggestStation } from './coverage.js';
 import { ingest, startCompass, stopCompass, trueToLocal } from './photos.js';
 import * as EX from './exporters.js';
 import { GUIDE_HTML } from './guide.js';
+import { initQuick, openQuick, quickRender } from './quickmode.js';
 
 /* ═══════════════════ estado de interfaz ═══════════════════ */
 
@@ -406,6 +407,15 @@ $('#g-make').addEventListener('click', () => {
   $('#g-info').textContent = `${n} estaciones pendientes · ~${Math.round(n * 1.5)} min con manguera`;
   toast(`${n} estaciones generadas`);
   setView('map');
+});
+
+$('#open-quick').addEventListener('click', () => {
+  if (!P.cur.pending.length) {
+    toast('Genera primero la malla de estaciones');
+    $('#g-make').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  openQuick(() => { requestDraw(); renderPoints(); });
 });
 $('#g-clear').addEventListener('click', () => { P.cur.pending = []; touch(false); $('#g-info').textContent = ''; });
 
@@ -901,6 +911,7 @@ onChange(() => {
   requestDraw();
   renderPoints();
   renderTrees();
+  if (!$('#quick').classList.contains('hidden')) quickRender();
   const st = stats();
   $('#project-name').textContent = P.cur.name;
   $('#project-sub').textContent = st.area
@@ -921,6 +932,7 @@ window.addEventListener('resize', debounce(() => {
 /* ═══════════════════ arranque ═══════════════════ */
 
 $('#guide-content').innerHTML = GUIDE_HTML;
+initQuick();
 updateCompass();
 // Mientras no haya medidas, la fecha de visita sigue al día actual: así el
 // proyecto preparado en casa queda fechado el día que se pisa la parcela.

@@ -22,6 +22,7 @@ const ASSETS = [
   './assets/js/exporters.js',
   './assets/js/zip.js',
   './assets/js/guide.js',
+  './assets/js/quickmode.js',
 ];
 
 self.addEventListener('install', e => {

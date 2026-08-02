@@ -25,6 +25,7 @@ que entienden Google Earth, QGIS, AutoCAD, SketchUp o Blender.
 | **Relieve** | Mapa hipsométrico en color, sombreado analítico y mapa de pendientes en %. |
 | **Perfiles** | Traza una línea sobre el plano y obtén la sección con desnivel y pendiente. |
 | **Malla de estaciones** | Genera el recorrido de medición en serpiente y te va marcando la siguiente estación pendiente. |
+| **Medición rápida** | Pantalla completa con teclado grande: tecleas la lectura de la mira, la app calcula la cota, la asigna a la estación y salta a la siguiente. Mantiene la pantalla encendida. |
 | **Árboles** | Posición, especie, diámetro de tronco y copa, altura y estado. |
 | **Fotos orientadas** | Cada foto guarda desde dónde y hacia dónde se tomó; se dibujan como conos sobre el plano. |
 | **Cobertura fotográfica** | Porcentaje de la parcela que ha entrado en el encuadre de alguna foto, y sugerencia de dónde colocarse para cubrir lo que falta. |
@@ -91,6 +92,7 @@ assets/js/
   store.js              localStorage (proyecto) + IndexedDB (fotos)
   render2d.js           plano: relieve, curvas, cotas, árboles, conos de foto
   render3d.js           vista 3D sobre canvas 2D (algoritmo del pintor)
+  quickmode.js          pantalla de medición a una mano
   coverage.js           cobertura fotográfica y sugerencia de estación
   photos.js             captura, compresión y brújula
   exporters.js          CSV, GeoJSON, KML, DXF, SVG, OBJ, ZIP

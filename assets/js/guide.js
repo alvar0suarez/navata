@@ -90,7 +90,23 @@ estación pendiente y la va tachando conforme mides.</p>
       la lectura difiere más de 2 cm, hay una burbuja en la manguera o el listón no estaba vertical.</li>
 </ol>
 
-<h2>6. Fotografías orientadas</h2>
+<h2>6. Modo de medición rápida</h2>
+<p>Con guantes puestos y el listón en una mano, rellenar formularios es inviable. El botón
+<strong>⚡ Modo medición rápida</strong> de la pestaña <em>Cotas</em> abre una pantalla completa con
+teclado grande donde solo tecleas la lectura de la mira y pulsas <em>Guardar</em>: la app calcula la
+cota, la asigna a la estación correcta y salta a la siguiente. Mantiene la pantalla encendida.</p>
+<ul>
+  <li><strong>Lectura / Cota Z</strong> — el botón de arriba a la derecha alterna entre teclear
+      centímetros en la mira (la app resta) o meter la cota directamente en metros.</li>
+  <li><strong>ref … · origen …</strong> — toca esa línea para fijar la lectura de referencia.
+      Cuando muevas la manguera, pon en <em>origen</em> la cota del punto donde apoya ahora el
+      extremo fijo y vuelve a leer la referencia: así arrastras el cero sin perderlo.</li>
+  <li><strong>Quiebre</strong> marca el punto como línea de rotura; <strong>Saltar</strong> manda
+      la estación al final (útil si hay un coche encima); <strong>Deshacer</strong> retira la
+      última cota y devuelve su estación a la cola.</li>
+</ul>
+
+<h2>7. Fotografías orientadas</h2>
 <p>Cada foto se guarda con la posición desde la que la hiciste y el rumbo hacia el que mirabas, y aparece en
 el plano como un cono. El indicador de <strong>cobertura</strong> te dice qué porcentaje de la parcela ha
 entrado en el encuadre de alguna foto, y el botón <em>Sugerir siguiente estación</em> calcula desde dónde y
@@ -106,7 +122,7 @@ hacia dónde disparar para ganar el mayor terreno no cubierto.</p>
   eje Y mirando hacia el fondo de la parcela y lee la brújula del móvil: ese número es el rumbo del eje +Y.
 </div>
 
-<h2>7. Al terminar el día</h2>
+<h2>8. Al terminar el día</h2>
 <ol>
   <li>Comprueba en <em>Datos</em> que el desnivel total y la pendiente media tienen sentido con lo que has visto.</li>
   <li>Exporta <strong>Todo + fotos (.zip)</strong>. Ese archivo es el respaldo completo.</li>
@@ -117,7 +133,7 @@ hacia dónde disparar para ganar el mayor terreno no cubierto.</p>
   los datos del navegador se pierden. Exporta el .json antes de irte de la parcela.
 </div>
 
-<h2>8. Chuleta de campo</h2>
+<h2>9. Chuleta de campo</h2>
 <table>
   <tr><th>Duda</th><th>Respuesta</th></tr>
   <tr><td>¿El agua sube en el listón?</td><td>El punto está <strong>más bajo</strong> que la referencia. Z negativa.</td></tr>
