@@ -287,11 +287,50 @@
             </label>
             <label>Intervalo de curvas (m)<input type="number" step="0.05" id="d-ci" value="0.1" inputmode="decimal"></label>
           </div>
+          <div id="d-summary" class="stats"></div>
+        </div>
+
+        <div class="card">
+          <h2>Parcela irregular por trilateración</h2>
+          <p class="hint">Los cuatro lados <strong>no</strong> definen un cuadrilátero: con los lados fijos
+          todavía se deforma como una tijera. Hace falta al menos una diagonal, que lo parte en dos
+          triángulos y esos sí quedan determinados.</p>
+          <div class="quad-diagram">
+            <svg viewBox="0 0 200 130">
+              <polygon points="20,110 180,112 168,26 34,18" class="qd-poly"/>
+              <line x1="20" y1="110" x2="168" y2="26" class="qd-diag"/>
+              <line x1="180" y1="112" x2="34" y2="18" class="qd-diag2"/>
+              <text x="100" y="126" class="qd-lbl">A · calle</text>
+              <text x="190" y="70" class="qd-lbl" text-anchor="middle">B</text>
+              <text x="100" y="12" class="qd-lbl">C</text>
+              <text x="10" y="66" class="qd-lbl" text-anchor="middle">D</text>
+              <text x="104" y="76" class="qd-lbl diag">P</text>
+              <text x="96" y="52" class="qd-lbl diag2">Q</text>
+              <circle cx="20" cy="110" r="3.5" class="qd-org"/>
+              <text x="26" y="103" class="qd-lbl org">origen</text>
+            </svg>
+          </div>
+          <div class="row2">
+            <label>A · frente a la calle (m)<input type="number" step="0.01" id="tri-a" inputmode="decimal"></label>
+            <label>B · lateral derecho (m)<input type="number" step="0.01" id="tri-b" inputmode="decimal"></label>
+          </div>
+          <div class="row2">
+            <label>C · fondo (m)<input type="number" step="0.01" id="tri-c" inputmode="decimal"></label>
+            <label>D · lateral izquierdo (m)<input type="number" step="0.01" id="tri-d" inputmode="decimal"></label>
+          </div>
+          <div class="row2">
+            <label>P · diagonal desde el origen (m)<input type="number" step="0.01" id="tri-p" inputmode="decimal"></label>
+            <label>Q · la otra diagonal (opcional)<input type="number" step="0.01" id="tri-q" inputmode="decimal"></label>
+          </div>
+          <div class="btn-row">
+            <button class="primary" id="tri-build">Construir parcela</button>
+            <button id="tri-square" class="ghost">Sin diagonal, a escuadra</button>
+          </div>
+          <div id="tri-info" class="hint"></div>
           <div class="row2">
             <label>Fecha de visita<input type="date" id="d-visit"></label>
             <label>Notas de campo<input type="text" id="d-notes" placeholder="Datum: clavo en esquina SO, marca a 1,00 m"></label>
           </div>
-          <div id="d-summary" class="stats"></div>
         </div>
 
         <div class="card">

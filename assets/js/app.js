@@ -4,7 +4,8 @@ import { $, $$, toast, download, fmtM, fmtZ, clamp, norm360, rad, uid, debounce,
 import { P, surface, stats, onChange, touch, addPoint, delPoint, addTree, delTree,
          delPhoto, makeGrid, makeRect, replaceProject, emptyProject } from './state.js';
 import { blobURL, blobs, clearProject } from './store.js';
-import { profileAlong, bbox, latLonToLocal, sampleSurface, distToSeg } from './geom.js';
+import { profileAlong, bbox, latLonToLocal, sampleSurface, distToSeg,
+         quadFromSides, quadFromSidesSquare } from './geom.js';
 import * as R from './render2d.js';
 import { draw3d, cam, setCamPreset } from './render3d.js';
 import { coverageGrid, suggestStation } from './coverage.js';
@@ -769,6 +770,53 @@ $('#d-rect').addEventListener('click', () => {
   R.fitView(canvas);
   setView('map');
   toast(`Parcela de ${fmtM(w)} × ${fmtM(h)} m — ${fmtM(w * h, 1)} m²`);
+});
+
+/* ── parcela irregular por trilateración ── */
+
+function applyQuad(res) {
+  const info = $('#tri-info');
+  if (!res.ok) {
+    info.className = 'hint tri-bad';
+    info.textContent = res.error;
+    return;
+  }
+  if (P.cur.boundary.length && !confirm('Se sustituirá el borde actual. ¿Continuar?')) return;
+
+  P.cur.boundary = res.poly.map(v => ({ x: Math.round(v.x * 1000) / 1000, y: Math.round(v.y * 1000) / 1000 }));
+  // El lado A (frente a la calle) es el que arranca en el origen.
+  P.cur.streetEdge = P.cur.boundary.findIndex(v => Math.abs(v.x) < 1e-6 && Math.abs(v.y) < 1e-6);
+  if (P.cur.streetEdge < 0) P.cur.streetEdge = 0;
+  touch();
+  R.fitView(canvas);
+
+  const st = stats();
+  let msg = `Parcela cerrada: ${fmtM(st.area, 1)} m², perímetro ${fmtM(st.perim, 1)} m.`;
+  if (res.check !== null && res.check !== undefined) {
+    const cm = Math.abs(res.check) * 100;
+    const medida = parseFloat($('#tri-q').value);
+    msg += cm <= 5
+      ? ` La segunda diagonal cuadra con ${fmtM(cm, 1)} cm de diferencia: las medidas son consistentes.`
+      : ` ⚠ La segunda diagonal se desvía ${fmtM(cm, 1)} cm: has medido ${fmtM(medida, 2)} m y con el resto de lados salen ${fmtM(medida + res.check, 2)} m. Repasa las cintas antes de fiarte del plano.`;
+  } else {
+    msg += ' Sin segunda diagonal no hay forma de comprobar el cierre.';
+  }
+  info.className = 'hint ' + (res.check === null || res.check === undefined || Math.abs(res.check) <= 0.05 ? 'tri-ok' : 'tri-bad');
+  info.textContent = msg;
+  toast('Parcela construida');
+  setView('map');
+}
+
+const triVal = id => parseFloat($('#tri-' + id).value);
+
+$('#tri-build').addEventListener('click', () => {
+  applyQuad(quadFromSides(triVal('a'), triVal('b'), triVal('c'), triVal('d'), triVal('p'), triVal('q')));
+});
+
+$('#tri-square').addEventListener('click', () => {
+  if (!confirm('Sin diagonal hay que suponer que la esquina del origen está a escuadra.\n' +
+               'Una parcela real rara vez lo está: el plano puede salir deformado.\n\n¿Continuar?')) return;
+  applyQuad(quadFromSidesSquare(triVal('a'), triVal('b'), triVal('c'), triVal('d')));
 });
 
 $('#a-here').addEventListener('click', () => {

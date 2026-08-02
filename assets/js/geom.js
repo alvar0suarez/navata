@@ -61,6 +61,103 @@ export function distToPoly(x, y, poly) {
   return d;
 }
 
+/* ───────────────────── trilateración de la parcela ───────────────────── */
+
+/** Intersección de dos circunferencias. Devuelve [p1, p2] o null si no se cortan. */
+export function intersectCircles(c0, r0, c1, r1) {
+  const dx = c1.x - c0.x, dy = c1.y - c0.y;
+  const d = Math.hypot(dx, dy);
+  if (d < 1e-9) return null;                       // concéntricas
+  if (d > r0 + r1 + 1e-9) return null;             // demasiado separadas
+  if (d < Math.abs(r0 - r1) - 1e-9) return null;   // una dentro de la otra
+  const a = (r0 * r0 - r1 * r1 + d * d) / (2 * d);
+  const h2 = r0 * r0 - a * a;
+  const h = Math.sqrt(Math.max(h2, 0));
+  const mx = c0.x + a * dx / d, my = c0.y + a * dy / d;
+  return [
+    { x: mx + h * dy / d, y: my - h * dx / d },
+    { x: mx - h * dy / d, y: my + h * dx / d },
+  ];
+}
+
+const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+
+/**
+ * Reconstruye un cuadrilátero a partir de sus cuatro lados y una diagonal.
+ *
+ * Los cuatro lados NO bastan: un cuadrilátero con lados fijos sigue siendo
+ * articulado. La diagonal p lo parte en dos triángulos, y un triángulo sí queda
+ * determinado por sus tres lados.
+ *
+ * Vértices: V0 en el origen, V1 sobre el eje +X (el lado `a` es el frente de la
+ * calle). La parcela crece hacia +Y.
+ *
+ *   a = V0→V1 (calle) · b = V1→V2 · c = V2→V3 · d = V3→V0 · p = V0→V2
+ *
+ * @param {number} [q] segunda diagonal V1→V3; si se pasa, se usa para comprobar
+ *                     el cierre y se devuelve el desajuste en `check`.
+ * @returns {{ok:true, poly:Array, check:?number}|{ok:false, error:string}}
+ */
+export function quadFromSides(a, b, c, d, p, q) {
+  const vals = { a, b, c, d, p };
+  for (const [k, v] of Object.entries(vals)) {
+    if (!Number.isFinite(v) || v <= 0) return { ok: false, error: `Falta la medida ${k} o no es válida.` };
+  }
+  const tri = (x, y, z, names) => {
+    if (x + y <= z + 1e-9 || y + z <= x + 1e-9 || x + z <= y + 1e-9)
+      return `El triángulo ${names} no cierra: ${x} + ${y} + ${z} incumple la desigualdad triangular. Repasa esas tres medidas.`;
+    return null;
+  };
+  const e1 = tri(a, b, p, 'calle–lateral–diagonal');
+  if (e1) return { ok: false, error: e1 };
+  const e2 = tri(p, c, d, 'diagonal–fondo–lateral');
+  if (e2) return { ok: false, error: e2 };
+
+  const V0 = { x: 0, y: 0 }, V1 = { x: a, y: 0 };
+
+  const s2 = intersectCircles(V0, p, V1, b);
+  if (!s2) return { ok: false, error: 'La diagonal no es compatible con los lados: revisa las medidas.' };
+  const V2 = s2[0].y > s2[1].y ? s2[0] : s2[1];        // la parcela crece hacia +Y
+
+  const s3 = intersectCircles(V0, d, V2, c);
+  if (!s3) return { ok: false, error: 'El lado del fondo no cierra con la diagonal: revisa las medidas.' };
+  // V3 debe caer al otro lado de la diagonal V0–V2 que V1, o el polígono se cruza.
+  const sideOfV1 = Math.sign(cross(V0, V2, V1));
+  let V3 = s3.find(s => Math.sign(cross(V0, V2, s)) === -sideOfV1) || s3[0];
+
+  const poly = [V0, V1, V2, V3];
+
+  // Orientación antihoraria, para que las áreas y los normales salgan coherentes
+  let area = 0;
+  for (let i = 0; i < 4; i++) {
+    const u = poly[i], v = poly[(i + 1) % 4];
+    area += u.x * v.y - v.x * u.y;
+  }
+  if (area < 0) { poly.reverse(); poly.unshift(poly.pop()); }
+
+  let check = null;
+  if (Number.isFinite(q) && q > 0) {
+    const i1 = poly.findIndex(v => v === V1), i3 = poly.findIndex(v => v === V3);
+    check = Math.hypot(poly[i1].x - poly[i3].x, poly[i1].y - poly[i3].y) - q;
+  }
+  return { ok: true, poly, check };
+}
+
+/**
+ * Variante sin diagonal: se supone ángulo recto en la esquina del origen.
+ * Menos fiable —una parcela real rara vez está a escuadra— pero sirve cuando no
+ * se ha podido medir ninguna diagonal.
+ */
+export function quadFromSidesSquare(a, b, c, d) {
+  for (const v of [a, b, c, d]) if (!Number.isFinite(v) || v <= 0)
+    return { ok: false, error: 'Faltan medidas o no son válidas.' };
+  const V0 = { x: 0, y: 0 }, V1 = { x: a, y: 0 }, V3 = { x: 0, y: d };
+  const s = intersectCircles(V1, b, V3, c);
+  if (!s) return { ok: false, error: 'Con la esquina a escuadra esos cuatro lados no cierran.' };
+  const V2 = s[0].x + s[0].y > s[1].x + s[1].y ? s[0] : s[1];
+  return { ok: true, poly: [V0, V1, V2, V3], check: null };
+}
+
 /* ───────────────────── interpolación de superficie ───────────────────── */
 
 /**

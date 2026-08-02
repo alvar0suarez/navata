@@ -26,8 +26,22 @@ export const GUIDE_HTML = `
   <li>Elige una <strong>esquina de la parcela junto a la calle</strong> como origen <code>(0,0)</code>. Clava una estaca; será tu referencia para siempre.</li>
   <li>El eje <strong>X</strong> corre a lo largo del frente de la calle. El eje <strong>Y</strong> entra hacia el fondo de la parcela.</li>
   <li>Tiende la cinta larga por el frente y anota el ancho real. Repite por el lateral para el fondo. Introduce ambos en <em>Datos ▸ Crear borde rectangular</em>.</li>
-  <li>Si la parcela no es rectangular, mide cada esquina por <strong>trilateración</strong>: distancia desde el origen y desde otra esquina conocida. Luego mueve los vértices con la herramienta ⬡ en el mapa.</li>
+  <li>Si la parcela no es rectangular, usa <em>Datos ▸ Parcela irregular por trilateración</em>.</li>
 </ol>
+<div class="callout warn">
+  <strong>Los cuatro lados no bastan.</strong> A diferencia de un triángulo, un cuadrilátero con los
+  cuatro lados fijos sigue siendo articulado: se deforma como una tijera de pantógrafo. Con
+  16 · 44 · 16 · 44 tanto vale un rectángulo como un rombo aplastado. Mide también <strong>una
+  diagonal</strong>, que lo parte en dos triángulos —y un triángulo sí queda determinado por sus tres
+  lados—. Si mides <strong>las dos diagonales</strong>, la app usa la segunda para comprobar el cierre
+  y te avisa si alguna cinta se fue.
+</div>
+<div class="callout">
+  <strong>Cómo medir una diagonal larga sin ayuda.</strong> Clava la punta de la cinta en la esquina
+  con un destornillador o una estaca y tira desde la opuesta. Si la cinta no llega, mide en dos
+  tramos con un jalón intermedio <em>alineado a ojo</em> entre las dos esquinas: mirando desde una
+  esquina, el jalón debe tapar exactamente a la otra.
+</div>
 <div class="callout warn">
   <strong>Escuadra sin escuadra.</strong> Para comprobar que X e Y son perpendiculares usa el 3-4-5:
   marca 3 m sobre un eje, 4 m sobre el otro; la diagonal entre ambas marcas debe medir exactamente 5 m.
@@ -83,6 +97,10 @@ y una precisión que no vas a aprovechar. Para un terreno de pendiente regular:<
 <p>Genera la malla en <em>Cotas ▸ Generador de malla</em> con recorrido en <strong>serpiente</strong>: haces una fila
 de ida y la siguiente de vuelta, sin cruzar la parcela en vacío. La app te marca en verde la siguiente
 estación pendiente y la va tachando conforme mides.</p>
+<p>La malla no es un simple retículo recortado: además de los nudos, cada fila incluye los
+<strong>puntos donde corta el borde</strong>, y las <strong>esquinas</strong> van las primeras de la
+cola (<code>E1…E4</code>). Sin eso, en una parcela con lados inclinados las franjas laterales
+quedarían sin medir y sus curvas de nivel serían pura invención del interpolador.</p>
 <ol>
   <li>Tiende la cuerda marcada sobre la fila <code>Y = 0</code> y mide todos sus puntos.</li>
   <li>Mueve la cuerda 4 m en Y (mide esos 4 m con la cinta en los dos extremos, no a ojo).</li>

@@ -83,5 +83,50 @@ if (closed) {
   ok('curva de depresión se cierra', gap < 0.6, `hueco ${gap.toFixed(3)} m, ${l.length} vértices`);
 } else ok('curva de depresión se cierra', false, 'no se encontró nivel < -0.4');
 
+// ── trilateración del cuadrilátero ──
+import { quadFromSides, quadFromSidesSquare, polyArea as pa2 } from '../assets/js/geom.js';
+
+{
+  // Rectángulo 15,92 × 44: diagonal = √(15,92² + 44²)
+  const diag = Math.hypot(15.92, 44);
+  const r = quadFromSides(15.92, 44, 15.92, 44, diag, diag);
+  ok('rectángulo: cierra', r.ok, r.ok ? '' : r.error);
+  if (r.ok) {
+    ok('rectángulo: área 700,5 m²', Math.abs(pa2(r.poly) - 15.92 * 44) < 0.01, pa2(r.poly).toFixed(2));
+    ok('rectángulo: segunda diagonal cuadra', Math.abs(r.check) < 1e-6, (r.check * 100).toFixed(3) + ' cm');
+    const ys = r.poly.map(v => v.y);
+    ok('rectángulo: crece hacia +Y', Math.min(...ys) > -1e-6 && Math.max(...ys) > 40);
+  }
+
+  // Trapecio real: frente 16, fondo 12, laterales distintos
+  const V = [{x:0,y:0},{x:16,y:0},{x:14,y:40},{x:2,y:38}];
+  const dist = (i,j) => Math.hypot(V[i].x-V[j].x, V[i].y-V[j].y);
+  const t = quadFromSides(dist(0,1), dist(1,2), dist(2,3), dist(3,0), dist(0,2), dist(1,3));
+  ok('trapecio: cierra', t.ok, t.ok ? '' : t.error);
+  if (t.ok) {
+    ok('trapecio: reproduce el área', Math.abs(pa2(t.poly) - pa2(V)) < 0.01,
+       `${pa2(t.poly).toFixed(2)} vs ${pa2(V).toFixed(2)} m²`);
+    ok('trapecio: diagonal de control exacta', Math.abs(t.check) < 1e-6, (t.check*1000).toFixed(3)+' mm');
+    // cada vértice debe coincidir con el original
+    let e = 0;
+    for (let i = 0; i < 4; i++) e = Math.max(e, Math.hypot(t.poly[i].x - V[i].x, t.poly[i].y - V[i].y));
+    ok('trapecio: vértices exactos', e < 1e-9, (e*1000).toFixed(6)+' mm');
+  }
+
+  // Medida mal tomada: la diagonal se pasa de largo
+  const bad = quadFromSides(16, 44, 16, 44, 90, null);
+  ok('detecta diagonal imposible', !bad.ok, bad.ok ? 'la aceptó' : bad.error.slice(0, 60));
+
+  // Discrepancia de cierre: la segunda diagonal 30 cm larga
+  const warn = quadFromSides(15.92, 44, 15.92, 44, diag, diag + 0.30);
+  ok('detecta desajuste de cierre', warn.ok && Math.abs(warn.check + 0.30) < 1e-6,
+     warn.ok ? (warn.check*100).toFixed(1)+' cm' : warn.error);
+
+  // Sin diagonal, a escuadra
+  const sq = quadFromSidesSquare(15.92, 44, 15.92, 44);
+  ok('a escuadra: rectángulo', sq.ok && Math.abs(pa2(sq.poly) - 700.48) < 0.01,
+     sq.ok ? pa2(sq.poly).toFixed(2)+' m²' : sq.error);
+}
+
 console.log(fails ? `\n${fails} PRUEBAS FALLIDAS` : '\nTodas las pruebas pasan');
 process.exit(fails ? 1 : 0);

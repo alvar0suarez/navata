@@ -194,23 +194,55 @@ export function makeGrid(dx, dy, order = 'boustro') {
 
   const rows = [];
   for (let j = 0; j < ys.length; j++) {
-    const row = [];
-    for (const x of xs) if (inPoly(x, ys[j])) row.push({ x, y: ys[j] });
+    const y = ys[j];
+    // Los cortes de la fila con el borde: en una parcela inclinada la malla
+    // rectangular deja fuera las franjas laterales, que son justo donde hace
+    // falta saber la cota para replantear un cierre o un muro.
+    const row = rowEdges(y, p.boundary).map(x => ({ x, y }));
+    for (const x of xs) {
+      if (!inPoly(x, y)) continue;
+      if (row.some(c => Math.abs(c.x - x) < dx * 0.3)) continue;   // ya cubierto por el corte
+      row.push({ x, y });
+    }
+    row.sort((a, b) => a.x - b.x);
     if (order === 'boustro' && j % 2 === 1) row.reverse();
     rows.push(row);
   }
 
   const done = p.points;
+  const tol = Math.min(dx, dy) * 0.4;
   const list = [];
+  const push = (x, y, label) => {
+    if (done.some(d => Math.hypot(d.x - x, d.y - y) < tol)) return;
+    if (list.some(d => Math.hypot(d.x - x, d.y - y) < tol)) return;
+    list.push({ id: uid(), x, y, label });
+  };
+
+  // Las esquinas van primero: fijan el marco de la parcela y conviene tenerlas
+  // medidas antes de empezar a recorrer la malla.
+  p.boundary.forEach((v, i) => push(v.x, v.y, 'E' + (i + 1)));
+
   let n = 1;
-  for (const row of rows) for (const c of row) {
-    if (done.some(d => Math.hypot(d.x - c.x, d.y - c.y) < Math.min(dx, dy) * 0.4)) continue;
-    list.push({ id: uid(), x: c.x, y: c.y, label: 'M' + (n++) });
-  }
+  for (const row of rows) for (const c of row) push(c.x, c.y, 'M' + (n++));
   p.pending = list;
   p.settings.gridDx = dx; p.settings.gridDy = dy;
   touch(false);
   return list.length;
+}
+
+/** Coordenadas X donde la horizontal y = `y` corta el borde del polígono. */
+function rowEdges(y, poly) {
+  const out = [];
+  for (let i = 0, n = poly.length; i < n; i++) {
+    const a = poly[i], b = poly[(i + 1) % n];
+    if (Math.abs(b.y - a.y) < 1e-9) continue;              // arista horizontal
+    const t = (y - a.y) / (b.y - a.y);
+    if (t < -1e-9 || t > 1 + 1e-9) continue;
+    out.push(a.x + (b.x - a.x) * t);
+  }
+  out.sort((p, q) => p - q);
+  // Elimina duplicados en los vértices, donde coinciden dos aristas
+  return out.filter((v, i) => i === 0 || v - out[i - 1] > 1e-6);
 }
 
 export function makeRect(w, h) {

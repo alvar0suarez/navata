@@ -190,6 +190,20 @@ button.danger-ghost{background:transparent;border-color:transparent;color:var(--
 .tab span{font-size:19px;line-height:1}
 .tab.active{color:var(--accent)}
 
+/* ── esquema del cuadrilátero ── */
+.quad-diagram{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:6px;margin:8px 0}
+.quad-diagram svg{width:100%;max-width:280px;display:block;margin:0 auto}
+.qd-poly{fill:rgba(78,168,222,.1);stroke:#e6edf3;stroke-width:2}
+.qd-diag{stroke:var(--accent2);stroke-width:1.6}
+.qd-diag2{stroke:var(--photo);stroke-width:1.4;stroke-dasharray:4 3}
+.qd-lbl{fill:var(--txt2);font-size:11px;font-family:system-ui,sans-serif;text-anchor:middle}
+.qd-lbl.diag{fill:var(--accent2)}
+.qd-lbl.diag2{fill:var(--photo)}
+.qd-lbl.org{fill:var(--warn);font-size:9px;text-anchor:start}
+.qd-org{fill:var(--warn)}
+.tri-ok{color:var(--accent2)}
+.tri-bad{color:var(--danger)}
+
 /* ── llamada a la acción ── */
 .big-cta{
   width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;
