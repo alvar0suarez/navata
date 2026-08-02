@@ -17,13 +17,17 @@ await p.click('[data-view="data"]'); await p.waitForTimeout(300);
 await p.fill('#d-w','15.92'); await p.fill('#d-h','44');
 await p.click('#d-rect'); await p.waitForTimeout(600);
 await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+
 await p.fill('#g-dx','4'); await p.fill('#g-dy','4');
 await p.click('#g-make'); await p.waitForTimeout(500);
 const pend = await p.evaluate(async()=>(await import('./assets/js/state.js')).P.cur.pending.length);
 ok('malla generada cubre el borde', pend===60, pend+' estaciones');
 
 await p.click('[data-view="points"]');
-await p.click('#open-quick'); await p.waitForTimeout(400);
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+
+await p.click('#hero-go'); await p.waitForTimeout(400);
 ok('abre modo rápido', await p.locator('#quick').isVisible());
 console.log('     estación: '+await p.textContent('#q-station')+' · '+await p.textContent('#q-xy'));
 

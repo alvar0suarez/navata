@@ -22,6 +22,7 @@ sin cobertura. Hazlo **con conexión, antes de ir a la parcela**.
 | **Curvas de nivel** | Interpola las cotas medidas con un *spline de placa delgada* y dibuja las curvas al intervalo que elijas (10 cm por defecto), con curvas maestras acotadas cada 5. |
 | **Relieve** | Mapa hipsométrico en color, sombreado analítico y mapa de pendientes en %. |
 | **Perfiles** | Traza una línea sobre el plano y obtén la sección con desnivel y pendiente. |
+| **Pantalla de medir** | Es por donde abre la app: la referencia activa, un botón grande para seguir donde lo dejaste, el progreso y las últimas cotas. Todo lo demás vive plegado en *Más opciones*. |
 | **Malla de estaciones** | Genera el recorrido —por líneas a lo largo o en serpiente a lo ancho— y te va marcando la siguiente estación pendiente. |
 | **Medición rápida** | Pantalla completa con teclado grande: tecleas la caída de la cuerda o la lectura de la mira, la app calcula la cota —corrigiendo la flecha de la cuerda—, la asigna a la estación y salta a la siguiente. Mantiene la pantalla encendida. |
 | **Árboles** | Posición, especie, diámetro de tronco y copa, altura y estado. |

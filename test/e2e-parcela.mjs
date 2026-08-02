@@ -12,7 +12,11 @@ const ok=(n,c,x='')=>{console.log((c?' ok  ':'FAIL ')+n+(x?' — '+x:'')); if(!c
 await p.goto((process.env.APP_URL || 'http://127.0.0.1:8899/index.html'),{waitUntil:'networkidle'});
 await p.waitForTimeout(800);
 
-ok('abre directo en el mapa', await p.locator('#view-map').isVisible());
+// La app abre por donde se trabaja, no en el mapa
+ok('abre en la pantalla de medir', await p.locator('#view-points').isVisible(),
+   await p.locator('.view.active').getAttribute('id'));
+ok('el botón principal invita a empezar', /Preparar y medir|Empezar a medir/.test(await p.textContent('#hero-go-title')),
+   (await p.textContent('#hero-go-title')).trim());
 const st = await p.evaluate(async()=>{
   const {P,stats}=await import('./assets/js/state.js');
   return {poly:P.cur.boundary, street:P.cur.streetEdge, ...stats()};
@@ -25,9 +29,13 @@ console.log('     '+await p.textContent('#project-sub'));
 await p.screenshot({path:`${OUT}/15-parcela-real.png`});
 
 // malla
-await p.click('[data-view="points"]'); await p.waitForTimeout(300);
+await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+ await p.waitForTimeout(300);
 await p.click('#g-make'); await p.waitForTimeout(600);
-await p.click('[data-view="points"]'); await p.waitForTimeout(200);
+await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+ await p.waitForTimeout(200);
 console.log('     '+await p.textContent('#g-info'));
 const n = await p.evaluate(async()=>(await import('./assets/js/state.js')).P.cur.pending.length);
 ok('malla 4×4 generada', n>=45 && n<=50, n+' estaciones');

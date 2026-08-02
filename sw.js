@@ -2,7 +2,7 @@
 // Estrategia: la app se precarga en la instalación y luego se sirve desde caché,
 // refrescándose en segundo plano cuando hay red (stale-while-revalidate).
 
-const CACHE = 'navata-v2';
+const CACHE = 'navata-v3';
 
 const ASSETS = [
   './',

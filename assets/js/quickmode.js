@@ -178,6 +178,7 @@ function render() {
   if (nuevaLinea) $('#q-newline-txt').textContent =
     `Línea ${st.line + 1}${s.nLines ? ' de ' + s.nLines : ''} · X = ${fmtM(st.x)} m`;
 
+  $('#q-sign').classList.toggle('hidden', s.metodo !== 'z');
   $('#q-break').classList.toggle('on', pointType === 'break');
   $('#q-save').disabled = !st || !Number.isFinite(z);
   $('#q-undo').disabled = !lastAction;
@@ -333,3 +334,4 @@ export function initQuick() {
 }
 
 export const quickRender = render;
+export const openQuickCfg = openCfg;

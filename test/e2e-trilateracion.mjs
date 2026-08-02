@@ -49,7 +49,9 @@ const st2 = await p.evaluate(async()=>(await import('./assets/js/state.js')).P.c
 ok('no toca el borde si falla', st2===4, st2+' vértices');
 
 // malla sobre la parcela irregular
-await p.click('[data-view="points"]'); await p.waitForTimeout(200);
+await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+ await p.waitForTimeout(200);
 await p.fill('#g-dx','4'); await p.fill('#g-dy','4');
 await p.click('#g-make'); await p.waitForTimeout(600);
 const n = await p.evaluate(async()=>(await import('./assets/js/state.js')).P.cur.pending.length);

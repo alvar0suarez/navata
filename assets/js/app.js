@@ -14,7 +14,7 @@ import { coverageGrid, suggestStation } from './coverage.js';
 import { ingest, startCompass, stopCompass, trueToLocal } from './photos.js';
 import * as EX from './exporters.js';
 import { GUIDE_HTML } from './guide.js';
-import { initQuick, openQuick, quickRender } from './quickmode.js';
+import { initQuick, openQuick, quickRender, openQuickCfg } from './quickmode.js';
 
 /* ═══════════════════ estado de interfaz ═══════════════════ */
 
@@ -42,6 +42,7 @@ function setView(v) {
   if (v === 'map') requestDraw();
   if (v === '3d') draw3dSafe();
   if (v === 'photos') renderPhotos();
+  if (v === 'points') renderHero();
   if (v === 'data') { fillDataForm(); renderSnapshots(); }
 }
 
@@ -412,14 +413,73 @@ $('#g-make').addEventListener('click', () => {
   setView('map');
 });
 
-$('#open-quick').addEventListener('click', () => {
+/* ═══════════════════ portada de medición ═══════════════════ */
+
+function empezarAMedir() {
   if (!P.cur.pending.length) {
-    toast('Genera primero la malla de estaciones');
-    $('#g-make').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Sin malla no hay nada que medir: se genera con los pasos por defecto y
+    // se entra directamente, en vez de mandarlo a otra pantalla.
+    if (P.cur.boundary.length < 3) { toast('Define primero el borde en Datos'); setView('data'); return; }
+    const n = makeGrid(parseFloat($('#g-dx').value) || 3, parseFloat($('#g-dy').value) || 5, $('#g-order').value);
+    toast(`${n} estaciones preparadas`);
+    renderHero();
     return;
   }
-  openQuick(() => { requestDraw(); renderPoints(); });
+  openQuick(() => { requestDraw(); renderPoints(); renderHero(); });
+}
+
+$('#hero-go').addEventListener('click', empezarAMedir);
+
+$('#hero-ref').addEventListener('click', () => {
+  // Abre el mismo panel de ajustes de la pantalla de medición, sin salir de aquí
+  openQuick(() => { requestDraw(); renderPoints(); renderHero(); });
+  openQuickCfg();
 });
+
+function renderHero() {
+  const p = P.cur, s = p.settings;
+  const hechos = p.points.length;
+  const quedan = p.pending.length;
+  const total = hechos + quedan;
+  const st = p.pending[0];
+
+  // Referencia activa
+  const esCuerda = s.metodo === 'cuerda';
+  $('#hero-ref-txt').textContent = esCuerda
+    ? `Cuerda a ${fmtZ(s.alturaCuerda)} m`
+    : s.metodo === 'manguera'
+      ? `Manguera · ref ${fmtM(s.refReading, 1)} cm`
+      : 'Cota directa en metros';
+  $('#hero-ref-sub').textContent = esCuerda
+    ? (s.flechaCuerda ? `Flecha ${fmtM(s.flechaCuerda, 1)} cm · toca para cambiar`
+                      : '⚠ Falta calibrar la flecha · toca para hacerlo')
+    : 'Toca para cambiar cómo mides';
+  $('#hero-ref').classList.toggle('warn', esCuerda && !s.flechaCuerda);
+
+  // Botón principal
+  const go = $('#hero-go');
+  go.classList.toggle('setup', !quedan && !hechos);
+  if (!quedan && !hechos) {
+    $('#hero-go-title').textContent = '▶ Preparar y medir';
+    $('#hero-go-next').textContent = `${fmtM(s.gridDx, 0)} × ${fmtM(s.gridDy, 0)} m sobre ${fmtM(stats().area, 0)} m²`;
+  } else if (!quedan) {
+    $('#hero-go-title').textContent = '✓ Malla completa';
+    $('#hero-go-next').textContent = 'Exporta la copia en Datos antes de irte';
+  } else {
+    $('#hero-go-title').textContent = hechos ? '▶ Seguir midiendo' : '▶ Empezar a medir';
+    $('#hero-go-next').textContent = `Siguiente: ${st.label} · X ${fmtM(st.x, 1)} · Y ${fmtM(st.y, 1)}`;
+  }
+
+  // Progreso
+  const pct = total ? hechos / total * 100 : 0;
+  $('#hero-prog-fill').style.width = pct + '%';
+  $('#hero-prog-txt').textContent = total ? `${hechos} de ${total}` : 'sin malla';
+
+  // Últimas cotas, para ver de un vistazo que va entrando bien
+  $('#hero-last').innerHTML = p.points.slice(-4).reverse()
+    .map(q => `<span>${escapeHTML(q.label)} <b class="${q.z < 0 ? 'neg' : ''}">${fmtZ(q.z)}</b></span>`)
+    .join('');
+}
 $('#g-clear').addEventListener('click', () => { P.cur.pending = []; touch(false); $('#g-info').textContent = ''; });
 
 $('#pt-del-all').addEventListener('click', () => {
@@ -1130,6 +1190,7 @@ onChange(() => {
   requestDraw();
   renderPoints();
   renderTrees();
+  renderHero();
   if (!$('#quick').classList.contains('hidden')) quickRender();
   const st = stats();
   $('#project-name').textContent = P.cur.name;
@@ -1157,12 +1218,10 @@ updateCompass();
 // proyecto preparado en casa queda fechado el día que se pisa la parcela.
 if (!P.cur.visitDate || !P.cur.points.length) P.cur.visitDate = today();
 
-// Primera visita: precarga las dimensiones que el usuario tenga en mente.
-if (!P.cur.boundary.length && !P.cur.points.length) {
-  setView('data');
-} else {
-  R.fitView(canvas);
-}
+// La app abre por donde se trabaja: si hay parcela, en la pantalla de medir.
+// Solo manda a Datos cuando falta lo básico y no hay nada que medir.
+if (P.cur.boundary.length >= 3) setView('points');
+else setView('data');
 
 touch(true);
 R.fitView(canvas);

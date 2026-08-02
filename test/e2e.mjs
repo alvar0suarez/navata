@@ -23,8 +23,8 @@ const step = async (name, fn) => {
 };
 
 await step('carga inicial', async () => {
-  // Con el borde de la parcela ya puesto, la app arranca en el mapa.
-  await page.waitForSelector('#view-map.active', { timeout: 3000 });
+  // Con el borde de la parcela ya puesto, la app arranca donde se trabaja.
+  await page.waitForSelector('#view-points.active', { timeout: 3000 });
   const st = await page.evaluate(async () => {
     const { stats } = await import('./assets/js/state.js');
     return stats();
@@ -83,6 +83,8 @@ await step('añadir cota tocando el mapa', async () => {
   const box = await page.locator('#map-canvas').boundingBox();
   await page.mouse.click(box.x + box.width * 0.4, box.y + box.height * 0.5);
   await page.waitForSelector('#view-points.active', { timeout: 2000 });
+  await page.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+  await page.waitForTimeout(200);
   await page.fill('#p-z', '-0.42');
   await page.click('#p-add');
   await page.waitForTimeout(300);
@@ -91,6 +93,8 @@ await step('añadir cota tocando el mapa', async () => {
 });
 
 await step('calculadora de manguera', async () => {
+  await page.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+  await page.waitForTimeout(150);
   await page.fill('#h-ref', '100');
   await page.fill('#h-pt', '137.5');
   await page.waitForTimeout(150);
@@ -104,6 +108,8 @@ await step('calculadora de manguera', async () => {
 
 await step('generador de malla', async () => {
   await page.click('[data-view="points"]');
+await page.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+
   await page.fill('#g-dx', '4'); await page.fill('#g-dy', '4');
   await page.click('#g-make');
   await page.waitForTimeout(400);
@@ -231,6 +237,8 @@ wide.on('pageerror', e => errors.push('desktop pageerror: ' + e.message));
 await wide.setViewportSize({ width: 1280, height: 820 });
 await wide.goto(URL, { waitUntil: 'networkidle' });
 await wide.waitForTimeout(900);
+await wide.click('[data-view="map"]');
+await wide.waitForTimeout(400);
 await wide.click('[data-layer="hypso"]');
 await wide.click('[data-layer="hillshade"]');
 await wide.waitForTimeout(600);

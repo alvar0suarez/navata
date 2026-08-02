@@ -20,14 +20,18 @@ await p.goto(BASE+'index.html',{waitUntil:'networkidle'});
 await p.waitForTimeout(600);
 
 // ── malla 3 × 5 recorrida a lo largo ──
-await p.click('[data-view="points"]'); await p.waitForTimeout(300);
+await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+ await p.waitForTimeout(300);
 ok('paso por defecto 3 × 5',
    await p.inputValue('#g-dx')==='3' && await p.inputValue('#g-dy')==='5',
    `${await p.inputValue('#g-dx')} × ${await p.inputValue('#g-dy')}`);
 ok('recorrido por líneas a lo largo', await p.inputValue('#g-order')==='cols');
 
 await p.click('#g-make'); await p.waitForTimeout(700);
-await p.click('[data-view="points"]'); await p.waitForTimeout(200);
+await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+ await p.waitForTimeout(200);
 let st = await state();
 const malla = st.pend.filter(q=>q.label.startsWith('M'));
 ok('genera 48 estaciones', st.pend.length===48, st.pend.length+' ('+malla.length+' de malla + 4 esquinas)');
@@ -55,8 +59,10 @@ await p.click('[data-view="map"]'); await p.waitForTimeout(500);
 await p.screenshot({path:`${OUT}/19-malla-cuerda.png`});
 
 // ── medir con la cuerda ──
-await p.click('[data-view="points"]'); await p.waitForTimeout(200);
-await p.click('#open-quick'); await p.waitForTimeout(500);
+await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+ await p.waitForTimeout(200);
+await p.click('#hero-go'); await p.waitForTimeout(500);
 ok('arranca en modo cuerda', (await p.textContent('#q-mode'))==='Cuerda', await p.textContent('#q-mode'));
 ok('pide la caída', /caída/.test(await p.textContent('#q-unit')), await p.textContent('#q-unit'));
 

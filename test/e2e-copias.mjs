@@ -23,10 +23,14 @@ await p.goto(BASE+'index.html',{waitUntil:'networkidle'});
 await p.waitForTimeout(600);
 
 // mide unas cuantas cotas
-await p.click('[data-view="points"]'); await p.waitForTimeout(250);
+await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+ await p.waitForTimeout(250);
 await p.click('#g-make'); await p.waitForTimeout(600);
-await p.click('[data-view="points"]'); await p.waitForTimeout(200);
-await p.click('#open-quick'); await p.waitForTimeout(400);
+await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+ await p.waitForTimeout(200);
+await p.click('#hero-go'); await p.waitForTimeout(400);
 // lecturas distintas en cada estación, para que el desnivel sea real y la
 // comprobación de la restauración signifique algo
 const lecturas = ['104','112','127','133','098','141','119','156'];
@@ -59,7 +63,9 @@ ok('nombre de fichero con fecha', /navata.*\d{4}-\d{2}-\d{2}\.json/.test(file.su
 
 // ── borrar todo y restaurar desde el fichero ──
 await p.click('#pt-del-all').catch(()=>{});
-await p.click('[data-view="points"]'); await p.waitForTimeout(200);
+await p.click('[data-view="points"]');
+await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.open=true;});
+ await p.waitForTimeout(200);
 await p.click('#pt-del-all'); await p.waitForTimeout(500);
 ok('se ha vaciado', (await st()).nPoints===0);
 

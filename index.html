@@ -63,13 +63,33 @@
       </div>
     </section>
 
-    <!-- ══════════════════ COTAS ══════════════════ -->
+    <!-- ══════════════════ MEDIR ══════════════════ -->
     <section class="view" id="view-points">
       <div class="scroll">
-        <button id="open-quick" class="big-cta">⚡ Modo medición rápida<small>Pantalla completa, teclado grande, a una mano</small></button>
+
+        <!-- Portada: todo lo que hace falta para ponerse a medir, y nada más -->
+        <button id="hero-ref" class="hero-ref">
+          <span id="hero-ref-txt"></span>
+          <small id="hero-ref-sub"></small>
+        </button>
+
+        <button id="hero-go" class="hero-go">
+          <b id="hero-go-title">▶ Medir</b>
+          <span id="hero-go-next"></span>
+        </button>
+
+        <div class="hero-prog">
+          <div class="hero-prog-bar"><div id="hero-prog-fill"></div></div>
+          <span id="hero-prog-txt"></span>
+        </div>
+
+        <div id="hero-last" class="hero-last"></div>
+
+        <details id="more-points">
+          <summary>Más opciones</summary>
 
         <div class="card">
-          <h2>Añadir cota rápida</h2>
+          <h2>Añadir cota a mano</h2>
           <p class="hint">Modo campo: introduce X, Y y la lectura. La app calcula la altura relativa al punto de referencia (0,000&nbsp;m).</p>
           <div class="row3">
             <label>X (m)<input type="number" step="0.01" id="p-x" inputmode="decimal"></label>
@@ -143,6 +163,8 @@
           </div>
           <div id="pt-list" class="list"></div>
         </div>
+
+        </details>
       </div>
     </section>
 
@@ -426,7 +448,7 @@
 
   <nav id="tabbar">
     <button class="tab active" data-view="map"><span>🗺️</span>Mapa</button>
-    <button class="tab" data-view="points"><span>⛳</span>Cotas</button>
+    <button class="tab" data-view="points"><span>📏</span>Medir</button>
     <button class="tab" data-view="trees"><span>🌳</span>Árboles</button>
     <button class="tab" data-view="photos"><span>📷</span>Fotos</button>
     <button class="tab" data-view="3d"><span>⛰️</span>3D</button>

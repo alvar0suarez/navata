@@ -289,7 +289,8 @@ body.quick-open{overflow:hidden}
 .q-key:active{background:var(--accent);color:#06121c}
 .q-key.wide-icon{font-size:22px}
 
-.q-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.q-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(60px,1fr));gap:8px}
+.q-alt.hidden{display:none}
 .q-alt{background:var(--panel);border:1px solid var(--line);color:var(--txt2);
   border-radius:11px;padding:12px 4px;font-size:12.5px}
 .q-alt.on{border-color:var(--photo);color:var(--photo)}
@@ -350,3 +351,42 @@ table.cmp .n{text-align:right;font-variant-numeric:tabular-nums}
 table.cmp tbody td:nth-child(2){color:var(--accent2);font-weight:650}
 #bk-auto{margin-top:10px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--bg)}
 #bk-auto summary{font-size:12.5px;color:var(--txt2);cursor:pointer}
+
+/* ── portada de medición ──────────────────────────────────────────────
+   El camino a teclear un número tenía tres pantallas por delante. Esta
+   portada lo deja en un toque: referencia arriba, botón gigante, progreso. */
+.hero-ref{
+  width:100%;display:flex;flex-direction:column;gap:2px;align-items:flex-start;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:12px 14px;margin-bottom:10px;color:var(--txt);text-align:left;
+}
+.hero-ref span{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums}
+.hero-ref small{font-size:12px;color:var(--txt2)}
+.hero-ref.warn{border-color:var(--warn)}
+.hero-ref.warn small{color:var(--warn)}
+
+.hero-go{
+  width:100%;display:flex;flex-direction:column;gap:4px;align-items:center;
+  background:var(--accent2);border:none;border-radius:16px;
+  padding:26px 16px;color:#052014;margin-bottom:12px;
+}
+.hero-go b{font-size:27px;font-weight:750;letter-spacing:-.3px}
+.hero-go span{font-size:13.5px;font-weight:600;opacity:.72;font-variant-numeric:tabular-nums}
+.hero-go:disabled{background:var(--panel2);color:var(--txt2)}
+.hero-go.setup{background:var(--accent);color:#06121c}
+
+.hero-prog{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.hero-prog-bar{flex:1;height:8px;background:var(--panel);border:1px solid var(--line);
+  border-radius:5px;overflow:hidden}
+#hero-prog-fill{height:100%;width:0;background:var(--accent2);transition:width .3s}
+.hero-prog span{font-size:12px;color:var(--txt2);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.hero-last{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;min-height:22px}
+.hero-last span{background:var(--panel);border:1px solid var(--line);border-radius:20px;
+  padding:3px 10px;font-size:12px;font-variant-numeric:tabular-nums;color:var(--txt2)}
+.hero-last b{color:var(--accent);font-weight:650}
+.hero-last b.neg{color:var(--warn)}
+
+#more-points{border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;background:var(--bg)}
+#more-points summary{font-size:13.5px;color:var(--txt2);cursor:pointer;padding:2px 0}
+#more-points[open] summary{margin-bottom:12px}
