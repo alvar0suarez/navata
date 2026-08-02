@@ -991,18 +991,18 @@ $('#d-demo').addEventListener('click', () => {
 /** Parcela sintética con pendiente hacia la calle, para probar la app sin datos reales. */
 function demoProject() {
   const p = emptyProject();
-  p.name = 'Ejemplo · 15,92 × 44 m';
+  p.name = 'Ejemplo · 15,50 × 32 m';
   p.notes = 'Datos sintéticos de demostración. Bórralos antes de medir de verdad.';
-  p.boundary = [{ x: 0, y: 0 }, { x: 15.92, y: 0 }, { x: 15.92, y: 44 }, { x: 0, y: 44 }];
   p.streetEdge = 0;
+  const W = 15.5, H = 32;
   const zAt = (x, y) =>
     -0.032 * y                                  // caída general hacia el fondo
     + 0.018 * x                                 // ligero peralte lateral
-    - 0.5 * Math.exp(-(((x - 11) ** 2) / 12 + ((y - 30) ** 2) / 40))   // vaguada
-    + 0.28 * Math.exp(-(((x - 4) ** 2) / 10 + ((y - 12) ** 2) / 30));  // loma
-  for (let y = 0; y <= 44; y += 4) {
-    for (let x = 0; x <= 15.92; x += 4) {
-      const xx = Math.min(x, 15.92);
+    - 0.5 * Math.exp(-(((x - 11) ** 2) / 12 + ((y - 22) ** 2) / 40))   // vaguada
+    + 0.28 * Math.exp(-(((x - 4) ** 2) / 10 + ((y - 9) ** 2) / 30));   // loma
+  for (let y = 0; y <= H; y += 4) {
+    for (let x = 0; x <= W; x += 4) {
+      const xx = Math.min(x, W);
       p.points.push({
         id: uid(), x: xx, y, z: Math.round(zAt(xx, y) * 1000) / 1000,
         label: `M${p.points.length + 1}`, type: y === 0 && xx === 0 ? 'ref' : 'grid',
@@ -1012,10 +1012,10 @@ function demoProject() {
   }
   p.points[0].z = 0;
   p.trees = [
-    { id: uid(), x: 3.5, y: 8, species: 'Olivo', dbh: 42, canopy: 5, height: 4.5, health: 'bueno', notes: '', label: 'A1', ts: '' },
-    { id: uid(), x: 12, y: 19, species: 'Higuera', dbh: 26, canopy: 4, height: 3.5, health: 'bueno', notes: '', label: 'A2', ts: '' },
-    { id: uid(), x: 6.5, y: 33, species: 'Almendro', dbh: 18, canopy: 3, height: 3, health: 'regular', notes: 'ramas secas', label: 'A3', ts: '' },
-    { id: uid(), x: 13.5, y: 40, species: 'Encina', dbh: 55, canopy: 7, height: 6, health: 'bueno', notes: '', label: 'A4', ts: '' },
+    { id: uid(), x: 3.5, y: 6, species: 'Olivo', dbh: 42, canopy: 5, height: 4.5, health: 'bueno', notes: '', label: 'A1', ts: '' },
+    { id: uid(), x: 12, y: 14, species: 'Higuera', dbh: 26, canopy: 4, height: 3.5, health: 'bueno', notes: '', label: 'A2', ts: '' },
+    { id: uid(), x: 6.5, y: 24, species: 'Almendro', dbh: 18, canopy: 3, height: 3, health: 'regular', notes: 'ramas secas', label: 'A3', ts: '' },
+    { id: uid(), x: 13, y: 29, species: 'Encina', dbh: 55, canopy: 7, height: 6, health: 'bueno', notes: '', label: 'A4', ts: '' },
   ];
   return p;
 }

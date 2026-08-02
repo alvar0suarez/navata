@@ -10,10 +10,12 @@ p.on('console',m=>{if(m.type()==='error')errs.push('console: '+m.text())});
 const ok=(n,c,x='')=>console.log((c?' ok  ':'FAIL ')+n+(x?' — '+x:''))||(c?0:errs.push(n));
 
 await p.goto((process.env.APP_URL || 'http://127.0.0.1:8899/index.html'),{waitUntil:'networkidle'});
+p.on('dialog', d => d.accept());
 
-// parcela real de prueba + malla
+// parcela de prueba + malla
+await p.click('[data-view="data"]'); await p.waitForTimeout(300);
 await p.fill('#d-w','15.92'); await p.fill('#d-h','44');
-await p.click('#d-rect'); await p.waitForTimeout(500);
+await p.click('#d-rect'); await p.waitForTimeout(600);
 await p.click('[data-view="points"]');
 await p.fill('#g-dx','4'); await p.fill('#g-dy','4');
 await p.click('#g-make'); await p.waitForTimeout(500);

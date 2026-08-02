@@ -7,6 +7,24 @@ import { buildSurface, smoothSurface, contours, bbox, polyArea, polyPerimeter,
 
 export const SCHEMA = 1;
 
+/**
+ * Medidas de la parcela tomadas en campo: 15,50 m de frente a la calle por
+ * 32 m de fondo. El proyecto arranca con este borde ya puesto para no tener que
+ * teclearlo estando allí.
+ *
+ * Se registra como rectángulo porque es lo que se midió. Si las esquinas no
+ * salen a escuadra, se corrigen los vértices con la herramienta ⬡ del mapa o se
+ * rehace el borde en Datos con los cuatro lados.
+ */
+export const PARCELA = { ancho: 15.5, fondo: 32 };
+
+const bordePorDefecto = () => [
+  { x: 0, y: 0 },
+  { x: PARCELA.ancho, y: 0 },
+  { x: PARCELA.ancho, y: PARCELA.fondo },
+  { x: 0, y: PARCELA.fondo },
+];
+
 export function emptyProject() {
   return {
     schema: SCHEMA,
@@ -18,9 +36,9 @@ export function emptyProject() {
     visitDate: today(),
     notes: '',
     anchor: null,                 // {lat, lon, rot}
-    boundary: [],                 // [{x,y}]
+    boundary: bordePorDefecto(),  // [{x,y}]
     boundaryAssumed: null,        // texto de la hipótesis si el borde no está medido del todo
-    streetEdge: -1,               // índice de arista que da a la calle
+    streetEdge: 0,                // índice de arista que da a la calle (el frente, y=0)
     points: [],                   // {id,x,y,z,label,type,method,ts}
     pending: [],                  // estaciones de malla aún sin medir {id,x,y,label}
     trees: [],                    // {id,x,y,species,dbh,canopy,height,health,notes,ts}
@@ -37,6 +55,12 @@ export const P = { cur: loadProject() || emptyProject() };
   const d = emptyProject();
   for (const k of Object.keys(d)) if (p[k] === undefined) p[k] = d[k];
   p.settings = Object.assign({}, d.settings, p.settings);
+  // Si se abrió la app antes de conocerse las medidas, el proyecto guardado está
+  // vacío: adopta el borde real en lugar de obligar a teclearlo.
+  if (!p.boundary.length && !p.points.length && !p.pending.length) {
+    p.boundary = bordePorDefecto();
+    p.streetEdge = 0;
+  }
 })();
 
 const listeners = new Set();

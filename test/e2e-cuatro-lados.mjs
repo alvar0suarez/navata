@@ -12,6 +12,8 @@ const ok=(n,c,x='')=>{console.log((c?' ok  ':'FAIL ')+n+(x?' — '+x:'')); if(!c
 await p.goto((process.env.APP_URL || 'http://127.0.0.1:8899/index.html'),{waitUntil:'networkidle'});
 await p.click('[data-view="data"]'); await p.waitForTimeout(300);
 
+const before = await p.evaluate(async()=>JSON.stringify((await import('./assets/js/state.js')).P.cur.boundary));
+
 const S = [16, 40.05, 12.17, 38.05];
 for (const [i,id] of ['a','b','c','d'].entries()) await p.fill('#tri-'+id, String(S[i]));
 await p.click('#tri-build'); await p.waitForTimeout(600);
@@ -23,9 +25,9 @@ const sq = await p.textContent('#tri-opt-sq'), tz = await p.textContent('#tri-op
 ok('muestra el área de cada una', /m²/.test(sq) && /m²/.test(tz), `escuadra ${sq} · trapecio ${tz}`);
 await p.screenshot({path:`${OUT}/14-solo-lados.png`});
 
-// no debe haber tocado nada todavía
-const nb = await p.evaluate(async()=>(await import('./assets/js/state.js')).P.cur.boundary.length);
-ok('no decide por su cuenta', nb===0, nb+' vértices');
+// el borde no debe cambiar hasta que se elige una hipótesis
+const after = await p.evaluate(async()=>JSON.stringify((await import('./assets/js/state.js')).P.cur.boundary));
+ok('no decide por su cuenta', after===before, after===before?'borde intacto':'lo cambió: '+after);
 
 await p.click('[data-assume="trap"]'); await p.waitForTimeout(600);
 const st = await p.evaluate(async()=>{

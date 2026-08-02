@@ -23,10 +23,20 @@ const step = async (name, fn) => {
 };
 
 await step('carga inicial', async () => {
-  await page.waitForSelector('#view-data.active', { timeout: 3000 });
+  // Con el borde de la parcela ya puesto, la app arranca en el mapa.
+  await page.waitForSelector('#view-map.active', { timeout: 3000 });
+  const st = await page.evaluate(async () => {
+    const { stats } = await import('./assets/js/state.js');
+    return stats();
+  });
+  if (Math.abs(st.area - 496) > 0.01) throw new Error('superficie inesperada: ' + st.area);
+  console.log(`       parcela por defecto: ${st.area} m²`);
 });
 
 await step('cargar proyecto de ejemplo', async () => {
+  await page.click('[data-view="data"]');
+  await page.waitForTimeout(300);
+  page.once('dialog', d => d.accept());
   await page.click('#d-demo');
   await page.waitForSelector('#view-map.active', { timeout: 3000 });
   await page.waitForTimeout(600);

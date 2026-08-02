@@ -100,6 +100,18 @@ assets/js/
   guide.js              metodología de campo
 ```
 
+## La parcela
+
+**15,50 m de frente a la calle × 32 m de fondo — 496 m², 95 m de perímetro.**
+
+El proyecto arranca con ese borde ya creado, así que al abrir la app en la parcela
+solo hay que generar la malla y empezar a medir. Con paso de 4 × 4 m salen
+**45 estaciones**, algo más de una hora con el nivel de manguera.
+
+Está registrado como rectángulo porque es lo que se midió. Si las esquinas no
+resultan estar a escuadra, se corrigen arrastrando los vértices con la herramienta ⬡
+del mapa, o se rehace el borde en *Datos* con los cuatro lados y una diagonal.
+
 ## Bitácora
 
 - **1 de agosto de 2026** — construcción de la aplicación.
