@@ -120,8 +120,14 @@ figcaption{color:var(--txt2);font-size:13px;margin-top:10px;text-align:center}
         <td>Para sujetar el tubo al listón. Las de velcro van de lujo.</td><td class="num">1–2 €</td></tr>
     <tr><td class="num">1</td><td>Colorante alimentario</td>
         <td>Rojo o azul. <strong>No es opcional en la práctica</strong>: el agua transparente en un tubo transparente al sol no hay quien la lea.</td><td class="num">2–3 €</td></tr>
+    <tr><td class="num">50 m</td><td>Hilo de albañil de nylon</td>
+        <td>Ø <strong>1,5 mm</strong>, del de tender hiladas. <strong>No vale cuerda de obra</strong>: pesa cuatro veces más y pandea cuatro veces más. Ver el apartado 5.</td><td class="num">3–5 €</td></tr>
+    <tr><td class="num">2</td><td>Palos de 1,5–2 m</td>
+        <td>Para los apoyos del tendido. Tubo de andamio, rodrigones de tomate o listones.</td><td class="num">4–8 €</td></tr>
+    <tr><td class="num">1</td><td>Tensor de hilo</td>
+        <td>Un tensor de alambre barato, o dos vueltas a un palo haciendo torniquete.</td><td class="num">2–4 €</td></tr>
   </tbody>
-  <tfoot><tr><td colspan="3">Subtotal alturas</td><td class="num">36–54 €</td></tr></tfoot>
+  <tfoot><tr><td colspan="3">Subtotal alturas</td><td class="num">45–71 €</td></tr></tfoot>
 </table>
 
 <h3>Para replantear las X y las Y</h3>
@@ -138,7 +144,7 @@ figcaption{color:var(--txt2);font-size:13px;margin-top:10px;text-align:center}
   <tfoot><tr><td colspan="3">Subtotal replanteo</td><td class="num">25–38 €</td></tr></tfoot>
 </table>
 
-<p><strong>Total: 61–92 €</strong>, y todo salvo el colorante te queda para siempre.</p>
+<p><strong>Total: 70–109 €</strong>, y todo salvo el colorante te queda para siempre.</p>
 
 <div class="box warn">
   <p><strong>La alternativa honesta: alquilar un láser.</strong> Un nivel láser rotativo con receptor y
@@ -277,7 +283,80 @@ hacia él y <em>el nivel del otro extremo también baja</em>. Si nadie lo vigila
   <code>ref … · origen …</code> y escríbela. Deja <em>origen</em> en 0.</li>
 </ol>
 
-<h2><span class="num">5.</span> Medir <span class="pill">≈ 70 min</span> <span class="pill">45 estaciones</span></h2>
+<h2><span class="num">5.</span> El método de la cuerda: manguera un día, cinta el resto</h2>
+
+<p>La manguera es precisa pero lenta. La alternativa que vas a usar es más rápida: una vez que
+tienes <strong>una cuerda tendida y nivelada</strong>, medir un punto es apoyar la cinta en el suelo
+y leer cuánto hay hasta la cuerda. Segundos por punto.</p>
+
+<ol>
+  <li><strong>Primer día, con la manguera:</strong> mides la línea del borde izquierdo a lo largo de
+  los 32 m. Eso te da las cotas de esa línea y, sobre todo, las <strong>cuatro esquinas</strong>, que
+  son el marco de todo.</li>
+  <li><strong>Tiendes el hilo</strong> entre dos palos, a lo largo de la parcela, y lo nivelas.</li>
+  <li><strong>Recorres el tendido</strong> midiendo la caída al suelo cada 5 m.</li>
+  <li><strong>Mueves los palos 3 m</strong> a la izquierda, vuelves a nivelar y repites. Seis
+  tendidos cubren los 15,50 m de ancho.</li>
+</ol>
+
+<p>La malla de la app está preparada para esto: <strong>líneas cada 3 m, puntos cada 5 m</strong>,
+recorrido <em>a lo largo</em> (no a lo ancho), <strong>48 estaciones</strong>. Te va cantando la
+estación siguiente sin que cruces la parcela en vacío, y te avisa cada vez que empieza un tendido
+nuevo para que no se te olvide fijar su altura.</p>
+
+<div class="box bad">
+  <p><strong>El problema serio de este método: la cuerda cuelga.</strong> Por muy fuerte que tires,
+  un hilo tendido no es una recta: forma una parábola que baja en el centro. Y la flecha crece con el
+  <em>cuadrado</em> de la distancia, así que en un tendido de 32 m se dispara.</p>
+</div>
+
+<table>
+  <thead><tr><th>Hilo</th><th class="num">Tendido de 32 m</th><th class="num">Tendido de 16 m</th></tr></thead>
+  <tbody>
+    <tr><td>Cuerda de obra trenzada 4 mm</td><td class="num">7,7 cm</td><td class="num">1,9 cm</td></tr>
+    <tr><td>Cuerda fina de 3 mm</td><td class="num">4,5 cm</td><td class="num">1,1 cm</td></tr>
+    <tr><td><strong>Hilo de albañil de nylon 1,5 mm</strong></td><td class="num"><strong>1,8 cm</strong></td><td class="num"><strong>0,4 cm</strong></td></tr>
+  </tbody>
+</table>
+<p class="pill" style="margin-bottom:14px">Flecha en el centro, tirando fuerte a mano (unos 10 kgf)</p>
+
+<p>Con cuerda de obra sobre 32 m te comes <strong>7,7 cm de error sistemático</strong> en el centro
+de cada línea: más que todo tu margen, y encima siempre en la misma dirección, así que en el plano
+aparece un valle en mitad de la parcela que no existe. Tienes tres formas de arreglarlo, y puedes
+combinarlas:</p>
+
+<ol>
+  <li><span class="rec">Usa hilo de nylon fino, no cuerda.</span> Es el cambio que más da por menos:
+  de 7,7 a 1,8 cm sin hacer nada más, y cuesta 4 €.</li>
+  <li><strong>Parte el tendido en dos de 16 m.</strong> La flecha va con el cuadrado, así que
+  la mitad de luz es la cuarta parte de flecha: bajas a 0,4 cm. Cuesta nivelar doce veces
+  en vez de seis.</li>
+  <li><span class="rec">Deja que la app la corrija.</span> Mide la flecha una sola vez y la app resta
+  la parábola en cada punto, que es máxima en el centro y nula en los apoyos. Con esto el error
+  residual son milímetros.</li>
+</ol>
+
+<div class="box key">
+  <p><strong>Cómo medir la flecha, una sola vez.</strong> Aquí es donde se paga el primer día de
+  manguera. Tiende el hilo sobre la línea que ya mediste con agua, ponte en el centro y mide la
+  caída con la cinta. En el modo de medición rápida, toca la línea de estado, y en
+  <em>Flecha en el centro</em> escribe la cota real que ya conocías de ese punto y la caída que
+  acabas de medir: la app calcula la flecha sola.</p>
+  <p>La misma cuerda tensada igual pandea igual, así que ese número sirve para los seis tendidos.</p>
+</div>
+
+<div class="box warn">
+  <p><strong>Y lo que no puedes olvidar: la altura de cada tendido.</strong> Nivelar la cuerda la deja
+  horizontal, pero no te dice a qué altura ha quedado. Cada vez que muevas los palos tienes que
+  volver a atar ese tendido al cero, o la línea entera saldrá desplazada y en el plano se verá como
+  un escalón entre franjas que en el terreno no está.</p>
+  <p>La forma barata de hacerlo: <strong>haz que cada tendido empiece en un punto que ya tengas
+  medido</strong> —el arranque de la línea, sobre el frente de la calle— y mide con la cinta cuánto
+  queda la cuerda por encima de ese punto. En el panel de ajustes tienes esa cuenta hecha: metes la
+  cota del punto de apoyo y los centímetros que sube la cuerda, y te da la altura.</p>
+</div>
+
+<h2><span class="num">6.</span> Medir <span class="pill">≈ 70 min</span> <span class="pill">48 estaciones</span></h2>
 
 <p>Abre en la app <strong>Cotas ▸ ⚡ Modo medición rápida</strong>. Te va cantando la estación
 siguiente y solo tienes que teclear la lectura. En cada punto:</p>
@@ -313,7 +392,7 @@ siguiente y solo tienes que teclear la lectura. En cada punto:</p>
   Arreglarlo en ese momento cuesta cinco minutos; descubrirlo en casa significa volver.</p>
 </div>
 
-<h2><span class="num">6.</span> Cuánto error vas a tener</h2>
+<h2><span class="num">7.</span> Cuánto error vas a tener</h2>
 <table>
   <thead><tr><th>Fuente</th><th>Error típico</th><th>¿Se acumula?</th></tr></thead>
   <tbody>
@@ -342,7 +421,7 @@ eso las comprobaciones de cierre no son opcionales.</p>
   </ol>
 </div>
 
-<h2><span class="num">7.</span> Antes de irte</h2>
+<h2><span class="num">8.</span> Antes de irte</h2>
 <ul class="chk">
   <li>Vuelve a <code>E1</code> y mídelo otra vez. Tiene que dar <code>0,000</code> ± 2 cm.</li>
   <li>Comprueba en <em>Datos</em> que el desnivel total y la pendiente media cuadran con lo que has visto con los ojos.</li>

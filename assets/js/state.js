@@ -43,7 +43,16 @@ export function emptyProject() {
     pending: [],                  // estaciones de malla aún sin medir {id,x,y,label}
     trees: [],                    // {id,x,y,species,dbh,canopy,height,health,notes,ts}
     photos: [],                   // {id,x,y,bearing,fov,range,key,thumb,w,h,note,ts}
-    settings: { contourInterval: 0.1, gridDx: 4, gridDy: 4, res: 0.25, idwPower: 2.2 },
+    settings: {
+      contourInterval: 0.1,
+      // Método de la cuerda nivelada: líneas a lo largo cada 3 m, puntos cada 5 m
+      gridDx: 3, gridDy: 5, gridOrder: 'cols', nLines: 0,
+      metodo: 'cuerda',           // 'cuerda' | 'manguera' | 'z'
+      alturaCuerda: 1,            // altura de la cuerda sobre el cero, en metros
+      flechaCuerda: 0,            // pandeo en el centro del tendido, en cm
+      refReading: 100, refOffset: 0,
+      res: 0.25, idwPower: 2.2,
+    },
   };
 }
 
@@ -197,77 +206,115 @@ export async function delPhoto(id) {
   touch(false);
 }
 
-/** Genera estaciones de malla dentro del borde, en orden de recorrido. */
-export function makeGrid(dx, dy, order = 'boustro') {
+/**
+ * Genera las estaciones de malla dentro del borde, en orden de recorrido.
+ *
+ * `order`:
+ *   'cols'    — serpiente por líneas a lo largo (columnas de X constante).
+ *               Es el orden del método de la cuerda nivelada: cada línea es un
+ *               tendido, se recorre entera y luego se mueven los palos.
+ *   'boustro' — serpiente por filas a lo ancho.
+ *   'rows'    — filas, siempre en el mismo sentido.
+ */
+export function makeGrid(dx, dy, order = 'cols') {
   const p = P.cur;
   if (p.boundary.length < 3) return 0;
   const bb = bbox(p.boundary);
   // Tolerancia hacia dentro: acepta también puntos justo sobre el borde.
   const inPoly = (x, y) => pointInPoly(x, y, p.boundary) || distToPoly(x, y, p.boundary) < 0.02;
 
-  // Posiciones de cada eje. Si el último paso no llega al borde se añade el
-  // borde mismo: sin esa columna, toda la franja del lado largo quedaría sin
-  // medir y las curvas de nivel ahí serían pura extrapolación.
+  // Posiciones de cada eje. El último paso rara vez cae justo en el borde: si
+  // sobra bastante se añade el borde como posición extra, y si sobra poco se
+  // desplaza la última hasta él. Sin esto quedaría una franja sin medir cuyas
+  // curvas de nivel serían pura extrapolación, o dos líneas a medio metro.
   const axis = (min, max, step) => {
     const out = [];
     for (let v = min; v <= max + 1e-9; v += step) out.push(v);
-    if (max - out[out.length - 1] > step * 0.25) out.push(max);
+    const rest = max - out[out.length - 1];
+    if (rest > step * 0.35) out.push(max);
+    else if (rest > 1e-6) out[out.length - 1] = max;
     return out;
   };
   const xs = axis(bb.x0, bb.x1, dx);
   const ys = axis(bb.y0, bb.y1, dy);
 
-  const rows = [];
-  for (let j = 0; j < ys.length; j++) {
-    const y = ys[j];
-    // Los cortes de la fila con el borde: en una parcela inclinada la malla
+  const byCols = order === 'cols';
+  // Eje que recorre cada línea y eje que separa una línea de la siguiente
+  const lineAt = byCols ? xs : ys;       // posición de cada línea
+  const alongAt = byCols ? ys : xs;      // posiciones dentro de la línea
+  const stepAlong = byCols ? dy : dx;
+
+  const lines = [];
+  for (let i = 0; i < lineAt.length; i++) {
+    const v = lineAt[i];
+    // Cortes de la línea con el borde: en una parcela inclinada la malla
     // rectangular deja fuera las franjas laterales, que son justo donde hace
     // falta saber la cota para replantear un cierre o un muro.
-    const row = rowEdges(y, p.boundary).map(x => ({ x, y }));
-    for (const x of xs) {
-      if (!inPoly(x, y)) continue;
-      if (row.some(c => Math.abs(c.x - x) < dx * 0.3)) continue;   // ya cubierto por el corte
-      row.push({ x, y });
+    const crossings = edgeCrossings(v, p.boundary, byCols ? 'x' : 'y');
+    const line = crossings.map(w => (byCols ? { x: v, y: w } : { x: w, y: v }));
+
+    for (const w of alongAt) {
+      const pt = byCols ? { x: v, y: w } : { x: w, y: v };
+      if (!inPoly(pt.x, pt.y)) continue;
+      const key = byCols ? 'y' : 'x';
+      if (line.some(c => Math.abs(c[key] - w) < stepAlong * 0.3)) continue;
+      line.push(pt);
     }
-    row.sort((a, b) => a.x - b.x);
-    if (order === 'boustro' && j % 2 === 1) row.reverse();
-    rows.push(row);
+
+    const key = byCols ? 'y' : 'x';
+    line.sort((a, b) => a[key] - b[key]);
+
+    // Extremos del tendido: hacen falta para corregir la flecha de la cuerda,
+    // que es una parábola entre los dos apoyos.
+    const lo = crossings.length ? crossings[0] : line[0]?.[key];
+    const hi = crossings.length ? crossings[crossings.length - 1] : line[line.length - 1]?.[key];
+    const span = (hi ?? 0) - (lo ?? 0);
+
+    if (order !== 'rows' && i % 2 === 1) line.reverse();
+    lines.push(line.map(pt => ({ ...pt, line: i, d: pt[key] - (lo ?? 0), L: span })));
   }
 
   const done = p.points;
   const tol = Math.min(dx, dy) * 0.4;
   const list = [];
-  const push = (x, y, label) => {
-    if (done.some(d => Math.hypot(d.x - x, d.y - y) < tol)) return;
-    if (list.some(d => Math.hypot(d.x - x, d.y - y) < tol)) return;
-    list.push({ id: uid(), x, y, label });
+  const push = (x, y, label, line, d = 0, L = 0) => {
+    if (done.some(q => Math.hypot(q.x - x, q.y - y) < tol)) return;
+    if (list.some(q => Math.hypot(q.x - x, q.y - y) < tol)) return;
+    list.push({ id: uid(), x, y, label, line, d, L });
   };
 
   // Las esquinas van primero: fijan el marco de la parcela y conviene tenerlas
   // medidas antes de empezar a recorrer la malla.
-  p.boundary.forEach((v, i) => push(v.x, v.y, 'E' + (i + 1)));
+  p.boundary.forEach((v, i) => push(v.x, v.y, 'E' + (i + 1), -1));
 
   let n = 1;
-  for (const row of rows) for (const c of row) push(c.x, c.y, 'M' + (n++));
+  for (const line of lines) for (const c of line) push(c.x, c.y, 'M' + (n++), c.line, c.d, c.L);
   p.pending = list;
-  p.settings.gridDx = dx; p.settings.gridDy = dy;
+  p.settings.gridDx = dx; p.settings.gridDy = dy; p.settings.gridOrder = order;
+  p.settings.nLines = lineAt.length;
   touch(false);
   return list.length;
 }
 
-/** Coordenadas X donde la horizontal y = `y` corta el borde del polígono. */
-function rowEdges(y, poly) {
+/**
+ * Cortes del borde con una recta paralela a un eje.
+ * `along='x'` → recta vertical x = v, devuelve las Y.
+ * `along='y'` → recta horizontal y = v, devuelve las X.
+ */
+function edgeCrossings(v, poly, along) {
   const out = [];
+  const fixed = along === 'x' ? 'x' : 'y';
+  const free = along === 'x' ? 'y' : 'x';
   for (let i = 0, n = poly.length; i < n; i++) {
     const a = poly[i], b = poly[(i + 1) % n];
-    if (Math.abs(b.y - a.y) < 1e-9) continue;              // arista horizontal
-    const t = (y - a.y) / (b.y - a.y);
+    if (Math.abs(b[fixed] - a[fixed]) < 1e-9) continue;    // arista paralela a la recta
+    const t = (v - a[fixed]) / (b[fixed] - a[fixed]);
     if (t < -1e-9 || t > 1 + 1e-9) continue;
-    out.push(a.x + (b.x - a.x) * t);
+    out.push(a[free] + (b[free] - a[free]) * t);
   }
   out.sort((p, q) => p - q);
   // Elimina duplicados en los vértices, donde coinciden dos aristas
-  return out.filter((v, i) => i === 0 || v - out[i - 1] > 1e-6);
+  return out.filter((w, i) => i === 0 || w - out[i - 1] > 1e-6);
 }
 
 export function makeRect(w, h) {

@@ -27,6 +27,12 @@ await p.click('#open-quick'); await p.waitForTimeout(400);
 ok('abre modo rápido', await p.locator('#quick').isVisible());
 console.log('     estación: '+await p.textContent('#q-station')+' · '+await p.textContent('#q-xy'));
 
+// esta suite comprueba el método de la manguera
+await p.click('#q-mode'); await p.waitForTimeout(300);
+await p.click('[data-modo="manguera"]'); await p.waitForTimeout(250);
+await p.click('#cfg-ok'); await p.waitForTimeout(250);
+ok('modo manguera seleccionado', (await p.textContent('#q-mode'))==='Manguera');
+
 // L_ref por defecto 100 cm; lectura 137,5 → Z = -0,375
 for (const k of ['1','3','7',',','5']) await p.click(`[data-k="${k}"]`);
 await p.waitForTimeout(150);
@@ -59,7 +65,9 @@ const st3 = await p.evaluate(async()=>{
 ok('deshacer', st3.n===0 && st3.pend===pend, `${st3.n} cotas, ${st3.pend} pendientes`);
 
 // modo cota directa
-await p.click('#q-mode'); await p.waitForTimeout(200);
+await p.click('#q-mode'); await p.waitForTimeout(300);
+await p.click('[data-modo="z"]'); await p.waitForTimeout(250);
+await p.click('#cfg-ok'); await p.waitForTimeout(250);
 ok('cambia a cota directa', (await p.textContent('#q-mode'))==='Cota Z');
 await p.click('[data-k="0"]'); await p.click('[data-k=","]'); await p.click('[data-k="4"]');
 await p.click('#q-sign'); await p.waitForTimeout(200);

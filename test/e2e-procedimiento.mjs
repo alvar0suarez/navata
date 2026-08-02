@@ -15,7 +15,7 @@ await p.waitForTimeout(400);
 ok('la página carga', (await p.title()).includes('tú solo'), await p.title());
 const t = await p.textContent('body');
 for (const [q,re] of [['garrafa',/garrafa/i],['40 m de tubo',/40 m/],['láser alternativo',/rotativo/],
-                      ['presupuesto',/61–92 €/],['tabla de error',/±1,1 cm/]])
+                      ['presupuesto',/Total: \d+–\d+ €/],['tabla de error',/±1,1 cm/],['flecha de la cuerda',/flecha|pandea/i],['método de la cuerda',/tendido/]])
   ok('contiene '+q, re.test(t));
 ok('sin desbordamiento horizontal',
    await p.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),

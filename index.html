@@ -116,12 +116,13 @@
         <div class="card">
           <h2>Generador de malla</h2>
           <div class="row3">
-            <label>Paso X (m)<input type="number" step="0.5" id="g-dx" value="4"></label>
-            <label>Paso Y (m)<input type="number" step="0.5" id="g-dy" value="4"></label>
-            <label>Orden
+            <label>Paso X (m)<input type="number" step="0.5" id="g-dx" value="3"></label>
+            <label>Paso Y (m)<input type="number" step="0.5" id="g-dy" value="5"></label>
+            <label>Recorrido
               <select id="g-order">
-                <option value="boustro">Serpiente (ida y vuelta)</option>
-                <option value="rows">Por filas</option>
+                <option value="cols">Líneas a lo largo (cuerda)</option>
+                <option value="boustro">Serpiente a lo ancho</option>
+                <option value="rows">Filas, siempre igual</option>
               </select>
             </label>
           </div>
@@ -426,10 +427,16 @@
     <div class="q-xy" id="q-xy"></div>
     <div class="q-next" id="q-next"></div>
 
+    <button id="q-newline" class="q-newline hidden">
+      <b>Nuevo tendido de cuerda</b>
+      <span id="q-newline-txt"></span>
+      <small>Nivélala y fija aquí su altura antes de seguir</small>
+    </button>
+
     <div class="q-screen">
       <div class="q-buffer"><span id="q-buffer">—</span><small id="q-unit"></small></div>
       <div class="q-result"><span id="q-result">—</span><small>cota resultante</small></div>
-      <button class="q-ref" id="q-ref"></button>
+      <button class="q-ref q-ref-btn" id="q-ref"></button>
     </div>
 
     <div id="q-pad"></div>
@@ -441,6 +448,62 @@
       <button id="q-undo" class="q-alt">Deshacer</button>
     </div>
     <button id="q-save" class="q-save">Guardar y siguiente ▸</button>
+
+    <div id="q-cfg" class="hidden">
+      <div class="cfg-card">
+        <div class="cfg-head">
+          <strong>Cómo estás midiendo</strong>
+          <button id="cfg-close" class="q-chip">✕</button>
+        </div>
+
+        <div class="cfg-modes">
+          <button data-modo="cuerda">Cuerda nivelada<small>tecleas la caída al suelo</small></button>
+          <button data-modo="manguera">Manguera<small>tecleas la lectura en la mira</small></button>
+          <button data-modo="z">Cota directa<small>tecleas los metros</small></button>
+        </div>
+
+        <div class="cfg-group" data-for="cuerda">
+          <label>Altura de la cuerda sobre el cero (m)
+            <input type="number" step="0.001" id="cfg-altura" inputmode="decimal"></label>
+          <p class="cfg-hint">Si no la sabes de memoria, sácala de un punto ya medido:</p>
+          <div class="cfg-row">
+            <label>Z del punto de apoyo (m)<input type="number" step="0.001" id="cfg-zbase" inputmode="decimal" placeholder="0"></label>
+            <label>Cuerda por encima (cm)<input type="number" step="0.1" id="cfg-sobre" inputmode="decimal"></label>
+          </div>
+          <div class="cfg-calcrow">
+            <span id="cfg-calc"></span>
+            <button id="cfg-usar">Usar</button>
+          </div>
+
+          <label>Flecha en el centro del tendido (cm)
+            <input type="number" step="0.1" id="cfg-flecha" inputmode="decimal"></label>
+          <p class="cfg-hint">La cuerda cuelga: sobre 32 m, una de obra pandea hasta 8 cm en el
+          centro. Calíbralo una vez comparando el centro de un tendido con su cota real de manguera:</p>
+          <div class="cfg-row">
+            <label>Z real del centro (m)<input type="number" step="0.001" id="cfg-fz" inputmode="decimal"></label>
+            <label>Caída medida allí (cm)<input type="number" step="0.1" id="cfg-fc" inputmode="decimal"></label>
+          </div>
+          <div class="cfg-calcrow">
+            <span id="cfg-fcalc"></span>
+            <button id="cfg-fusar">Usar</button>
+          </div>
+        </div>
+
+        <div class="cfg-group hidden" data-for="manguera">
+          <div class="cfg-row">
+            <label>Lectura de referencia (cm)<input type="number" step="0.1" id="cfg-ref" inputmode="decimal"></label>
+            <label>Origen (m)<input type="number" step="0.001" id="cfg-origen" inputmode="decimal"></label>
+          </div>
+          <p class="cfg-hint">Deja el origen en 0 salvo que hayas movido el extremo fijo de la manguera.</p>
+        </div>
+
+        <div class="cfg-group hidden" data-for="z">
+          <p class="cfg-hint">Tecleas la cota tal cual, en metros respecto al cero.</p>
+        </div>
+
+        <button id="cfg-ok" class="q-save" style="font-size:16px;padding:15px">Listo</button>
+      </div>
+    </div>
   </div>
 
   <div id="toast"></div>
