@@ -34,7 +34,10 @@ que entienden Google Earth, QGIS, AutoCAD, SketchUp o Blender.
 
 ## Cómo se mide
 
-La guía completa está **dentro de la app**, en la pestaña *Guía*. En resumen:
+📄 **[Lista de la compra y procedimiento paso a paso](https://alvar0suarez.github.io/navata/procedimiento.html)**
+— página aparte e imprimible: qué comprar, cuánto cuesta y cómo medir las 45 cotas sin ayuda.
+
+La guía resumida está también **dentro de la app**, en la pestaña *Guía*:
 
 - **Nivel de manguera** (una manguera transparente de 25 m llena de agua, ~12 €): precisión
   de ±5–10 mm, muy por debajo del objetivo de ±5 cm. El agua en un tubo abierto por los dos

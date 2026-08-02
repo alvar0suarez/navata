@@ -3,18 +3,19 @@
 export const GUIDE_HTML = `
 <div class="card">
   <h2 style="margin-top:0">Cómo levantar la parcela en una mañana</h2>
-  <p class="hint">Objetivo: curvas de nivel con error de ±5 cm, sin instrumental caro. Material total: menos de 30 €.</p>
+  <p class="hint">Objetivo: curvas de nivel con error de ±5 cm, sin instrumental caro.</p>
+  <a class="big-cta" href="procedimiento.html" style="text-decoration:none;margin-top:10px">
+    🧰 Lista de la compra y procedimiento
+    <small>Página aparte, imprimible: qué comprar y cómo medir tú solo</small>
+  </a>
 </div>
 
 <h2>1. Material</h2>
-<table>
-  <tr><th>Elemento</th><th>Para qué</th><th>Coste</th></tr>
-  <tr><td>Manguera transparente Ø8–10 mm, 25–30 m</td><td>Nivel de agua: el instrumento principal</td><td>10–15 €</td></tr>
-  <tr><td>Listón de 2 m marcado en cm (o flexómetro pegado a un palo)</td><td>Mira de lectura</td><td>3–5 €</td></tr>
-  <tr><td>Cinta métrica de 30–50 m</td><td>Medir X e Y</td><td>8–12 €</td></tr>
-  <tr><td>Cuerda de 50 m + 6 estacas</td><td>Alinear filas de la malla</td><td>5 €</td></tr>
-  <tr><td>Rotulador, cinta de pintor, botella de agua</td><td>Marcar y llenar</td><td>2 €</td></tr>
-</table>
+<p>La lista completa con especificaciones y precios está en la
+<a href="procedimiento.html" style="color:#5ee1a0">página del procedimiento</a>. En corto:
+40 m de tubo transparente de Ø10 mm, una garrafa de 5 L, un listón de 2 m con un flexómetro pegado,
+cinta métrica de 50 m, cuerda marcada y estacas. Entre <strong>60 y 90 €</strong>, y todo salvo el
+colorante te queda para siempre.</p>
 <div class="callout">
   <strong>Truco de las marcas.</strong> Marca la cuerda cada metro con cinta de colores antes de salir de casa
   (un color distinto cada 5 m). En campo, tender la cuerda ya te da todas las estaciones de una fila sin
@@ -31,7 +32,7 @@ export const GUIDE_HTML = `
 <div class="callout warn">
   <strong>Los cuatro lados no bastan.</strong> A diferencia de un triángulo, un cuadrilátero con los
   cuatro lados fijos sigue siendo articulado: se deforma como una tijera de pantógrafo. Con
-  16 · 44 · 16 · 44 tanto vale un rectángulo como un rombo aplastado. Mide también <strong>una
+  15,50 · 32 · 15,50 · 32 tanto vale un rectángulo como un rombo aplastado. Mide también <strong>una
   diagonal</strong>, que lo parte en dos triángulos —y un triángulo sí queda determinado por sus tres
   lados—. Si mides <strong>las dos diagonales</strong>, la app usa la segunda para comprobar el cierre
   y te avisa si alguna cinta se fue.
@@ -77,9 +78,14 @@ queda al mismo nivel: eso es un plano horizontal perfecto, sin electrónica y si
   <li><strong>La cota es</strong> <code>Z = L<sub>ref</sub> − L<sub>punto</sub></code>. Si el agua sube en el listón, el punto está más bajo; si baja, más alto. La calculadora de la pestaña <em>Cotas</em> hace esta resta por ti.</li>
 </ol>
 <div class="callout">
-  <strong>Alcance.</strong> Con 25 m de manguera cubres una parcela de 16 × 44 m desde dos posiciones del
-  extremo A. Cuando muevas el extremo A, mide antes la cota del punto nuevo desde el viejo: ese punto se
-  convierte en tu nuevo cero y arrastras la diferencia. Anótalo como cota de tipo <em>Referencia</em>.
+  <strong>Alcance.</strong> La esquina más lejana de la parcela está a
+  <code>√(15,50² + 32²) = 35,6 m</code> del origen, así que con <strong>40 m de tubo llegas a todo
+  desde un solo montaje</strong>. Merece la pena pagar esos metros de más: mover el extremo fijo
+  obliga a enlazar ceros y es donde se cuelan los errores.
+  <br><br>
+  Si aun así tienes que moverlo, mide antes la cota del punto nuevo desde el montaje viejo, anótala
+  como cota de tipo <em>Referencia</em> y métela en <em>origen</em> dentro del modo de medición
+  rápida: la app arrastra la diferencia sola.
 </div>
 
 <h3>Precisión que puedes esperar</h3>
@@ -95,14 +101,15 @@ queda al mismo nivel: eso es un plano horizontal perfecto, sin electrónica y si
 en el mundo, nunca para las alturas.</p>
 
 <h2>4. Cuántos puntos medir</h2>
-<p>La tentación es hacer una malla de 1 × 1 m. En 16 × 44 m eso son <strong>704 puntos</strong>: dos días de trabajo
-y una precisión que no vas a aprovechar. Para un terreno de pendiente regular:</p>
+<p>La tentación es hacer una malla de 1 × 1 m. En esta parcela de 15,50 × 32 m eso son
+<strong>561 puntos</strong>: dos días de trabajo y una precisión que no vas a aprovechar.
+A ritmo de minuto y medio por punto:</p>
 <table>
-  <tr><th>Malla</th><th>Puntos en 16×44 m</th><th>Tiempo</th><th>Recomendado para</th></tr>
-  <tr><td>1 × 1 m</td><td>704</td><td>16 h</td><td>solo zonas críticas puntuales</td></tr>
-  <tr><td>2 × 2 m</td><td>~200</td><td>4–5 h</td><td>si vas a mover tierra con precisión</td></tr>
-  <tr><td><strong>4 × 4 m</strong></td><td><strong>~60</strong></td><td><strong>1,5–2 h</strong></td><td><strong>primera visita: esto es lo tuyo</strong></td></tr>
-  <tr><td>5 × 5 m</td><td>~40</td><td>1 h</td><td>reconocimiento rápido</td></tr>
+  <tr><th>Malla</th><th>Estaciones</th><th>Tiempo</th><th>Recomendado para</th></tr>
+  <tr><td>1 × 1 m</td><td>561</td><td>14 h</td><td>solo zonas críticas puntuales</td></tr>
+  <tr><td>2 × 2 m</td><td>153</td><td>~4 h</td><td>si vas a mover tierra con precisión</td></tr>
+  <tr><td><strong>4 × 4 m</strong></td><td><strong>45</strong></td><td><strong>≈ 70 min</strong></td><td><strong>primera visita: esto es lo tuyo</strong></td></tr>
+  <tr><td>5 × 5 m</td><td>32</td><td>≈ 50 min</td><td>reconocimiento rápido</td></tr>
 </table>
 <div class="callout">
   <strong>Lo que de verdad marca la diferencia no es la densidad de la malla, sino los puntos de quiebre.</strong>

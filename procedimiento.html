@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12161c">
+<title>Medir las alturas tú solo · Navata</title>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#0d1117; --panel:#171d26; --panel2:#1e2631; --line:#2a3441;
+  --txt:#e6edf3; --txt2:#9aa7b4; --accent:#4ea8de; --accent2:#5ee1a0;
+  --warn:#f0a35e; --danger:#e5646b;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--txt);
+  font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:0 0 60px;
+}
+.wrap{max-width:780px;margin:0 auto;padding:0 18px}
+header{background:linear-gradient(160deg,#16202b,#0d1117);border-bottom:1px solid var(--line);
+  padding:28px 0 22px;margin-bottom:24px}
+h1{font-size:26px;margin:0 0 6px;letter-spacing:-.3px}
+.lead{color:var(--txt2);font-size:15px;margin:0}
+.back{display:inline-block;margin-bottom:14px;color:var(--accent);text-decoration:none;font-size:14px}
+h2{font-size:19px;margin:34px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+h2 .num{color:var(--accent);font-variant-numeric:tabular-nums}
+h3{font-size:15px;margin:22px 0 8px;color:var(--accent2)}
+p,li{font-size:15px}
+ul,ol{padding-left:22px}
+li{margin:7px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);font-weight:650}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:700;background:var(--panel2)}
+.box{background:var(--panel);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;
+  padding:12px 15px;margin:16px 0}
+.box.warn{border-left-color:var(--warn)}
+.box.key{border-left-color:var(--accent2);background:#141f1b}
+.box.bad{border-left-color:var(--danger)}
+.box p:first-child{margin-top:0}
+.box p:last-child{margin-bottom:0}
+.chk{list-style:none;padding-left:0}
+.chk li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--line)}
+.chk li::before{content:"";flex:0 0 auto;width:17px;height:17px;margin-top:3px;
+  border:2px solid var(--txt2);border-radius:4px}
+code{background:var(--panel2);padding:1px 6px;border-radius:5px;font-size:14px}
+.pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+  border-radius:20px;padding:2px 10px;font-size:12.5px;color:var(--txt2);margin-right:6px}
+.rec{color:var(--accent2);font-weight:650}
+figure{margin:18px 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+figure svg{width:100%;height:auto;display:block}
+figcaption{color:var(--txt2);font-size:13px;margin-top:10px;text-align:center}
+.print-only{display:none}
+
+@media print{
+  :root{--bg:#fff;--panel:#f7f9fb;--panel2:#eef2f6;--line:#c8d0d8;
+        --txt:#111;--txt2:#555;--accent:#1a5f8f;--accent2:#1f7a4d;--warn:#8a5a12}
+  body{padding:0;font-size:11pt}
+  .wrap{max-width:none;padding:0}
+  /* .box.key lleva el fondo oscuro fijo: en papel quedaría texto negro sobre negro */
+  .box.key{background:#edf6f0}
+  header{background:none;padding:0 0 10px;margin-bottom:12px}
+  .back,.no-print{display:none}
+  .print-only{display:block}
+  h2{page-break-after:avoid;margin-top:20px}
+  table,figure,.box{page-break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="back no-print" href="index.html">← Volver a la aplicación</a>
+    <h1>Medir las alturas tú solo</h1>
+    <p class="lead">Material que comprar y procedimiento paso a paso para levantar las 45 cotas
+    de la parcela sin ayuda, con un error muy por debajo de los ±5&nbsp;cm.</p>
+    <p class="print-only" style="font-size:10pt;color:#555">Parcela de La Navata · 15,50 × 32 m · 496 m²</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<div class="box key">
+  <p><strong>La idea en una frase.</strong> El agua dentro de un tubo abierto por los dos extremos se
+  queda siempre al mismo nivel. Eso es un plano horizontal perfecto, gratis y sin calibrar. Si dejas
+  un extremo quieto dentro de una garrafa y paseas el otro por la parcela, cada lectura te dice
+  cuánto baja el suelo respecto a ese plano.</p>
+</div>
+
+<div class="box">
+  <p><strong>Por qué no acumula error.</strong> Todos los puntos se miden contra <em>el mismo</em>
+  plano de agua, así que los errores no se encadenan: un fallo en el punto 12 no contamina el 13.
+  Es la diferencia con ir encadenando un listón y un nivel de burbuja, donde cada tramo hereda el
+  error del anterior y a los quince pasos llevas 15 cm de desvío.</p>
+</div>
+
+<h2><span class="num">1.</span> Lista de la compra</h2>
+
+<h3>Para las alturas</h3>
+<table>
+  <thead><tr><th>Cant.</th><th>Artículo</th><th>Qué pedir exactamente</th><th class="num">Precio</th></tr></thead>
+  <tbody>
+    <tr><td class="num">40 m</td><td>Tubo transparente de PVC cristal</td>
+        <td>Ø interior <strong>10 mm</strong>. En ferretería se vende a metros. No cojas 8 mm: tarda más en estabilizarse en tramos largos.</td><td class="num">22–30 €</td></tr>
+    <tr><td class="num">1</td><td>Garrafa transparente de 5 L</td>
+        <td>De boca ancha, de las de agua. Sirve una vacía de casa.</td><td class="num">0–2 €</td></tr>
+    <tr><td class="num">1</td><td>Listón de pino de 2 m</td>
+        <td>Sección 30×30 o 40×40 mm, lo más recto que encuentres. Será la mira.</td><td class="num">3–5 €</td></tr>
+    <tr><td class="num">1</td><td>Flexómetro de 5 m</td>
+        <td>Para pegarlo al listón. Vale uno barato.</td><td class="num">4–6 €</td></tr>
+    <tr><td class="num">1</td><td>Nivel de burbuja pequeño</td>
+        <td>De 15–20 cm, para pegarlo al listón y saber que está vertical.</td><td class="num">4–6 €</td></tr>
+    <tr><td class="num">2</td><td>Bridas o abrazaderas</td>
+        <td>Para sujetar el tubo al listón. Las de velcro van de lujo.</td><td class="num">1–2 €</td></tr>
+    <tr><td class="num">1</td><td>Colorante alimentario</td>
+        <td>Rojo o azul. <strong>No es opcional en la práctica</strong>: el agua transparente en un tubo transparente al sol no hay quien la lea.</td><td class="num">2–3 €</td></tr>
+  </tbody>
+  <tfoot><tr><td colspan="3">Subtotal alturas</td><td class="num">36–54 €</td></tr></tfoot>
+</table>
+
+<h3>Para replantear las X y las Y</h3>
+<table>
+  <thead><tr><th>Cant.</th><th>Artículo</th><th>Qué pedir exactamente</th><th class="num">Precio</th></tr></thead>
+  <tbody>
+    <tr><td class="num">1</td><td>Cinta métrica de 50 m</td>
+        <td>De fibra de vidrio con manivela. La de acero se dobla y pesa.</td><td class="num">12–18 €</td></tr>
+    <tr><td class="num">50 m</td><td>Cuerda de obra</td><td>Trenzada, de 3–4 mm. Que no dé de sí.</td><td class="num">3–5 €</td></tr>
+    <tr><td class="num">8</td><td>Estacas</td><td>Redondo corrugado de 8 mm cortado a 50 cm, o estacas de madera.</td><td class="num">5–8 €</td></tr>
+    <tr><td class="num">1</td><td>Cinta americana de colores</td><td>Dos colores, para marcar la cuerda cada metro.</td><td class="num">3–5 €</td></tr>
+    <tr><td class="num">1</td><td>Rotulador permanente</td><td>Punta gruesa.</td><td class="num">2 €</td></tr>
+  </tbody>
+  <tfoot><tr><td colspan="3">Subtotal replanteo</td><td class="num">25–38 €</td></tr></tfoot>
+</table>
+
+<p><strong>Total: 61–92 €</strong>, y todo salvo el colorante te queda para siempre.</p>
+
+<div class="box warn">
+  <p><strong>La alternativa honesta: alquilar un láser.</strong> Un nivel láser rotativo con receptor y
+  mira telescópica se alquila por <strong>25–40 € el día</strong> en cualquier alquiler de maquinaria.
+  Mide en 20 segundos por punto con ±3 mm, es totalmente de una persona, y las 45 estaciones te
+  llevarían <strong>20 minutos en vez de 70</strong>.</p>
+  <p>Para una sola visita sale más barato que comprar el equipo de agua. Lo que decide:
+  <strong>si vas a volver</strong> —a replantear un muro, a comprobar cómo quedó el movimiento de
+  tierras— el equipo de agua es tuyo y no depende de horarios de alquiler ni de baterías. Si esto es
+  un levantamiento único, alquila el láser.</p>
+  <p>Importante si alquilas: <strong>exige el receptor</strong>. Al aire libre el haz no se ve, y sin
+  receptor el láser rotativo no sirve de nada a pleno sol.</p>
+</div>
+
+<h2><span class="num">2.</span> El detalle que hace que se pueda solo</h2>
+
+<p>El nivel de manguera clásico se explica con dos personas: una sujeta un extremo en la referencia y
+la otra pasea el segundo. Hecho así, tú solo no puedes, porque cuando bajas tu extremo el agua fluye
+hacia él y <em>el nivel del otro extremo también baja</em>. Si nadie lo vigila, pierdes la referencia.</p>
+
+<div class="box key">
+  <p><strong>La solución es la garrafa.</strong> Metiendo el extremo fijo dentro de una garrafa de
+  5 litros, el agua que se mueve sale de un depósito ancho en vez de un tubo estrecho. Un tubo de
+  10 mm tiene 0,8 cm² de sección; la garrafa, unos 200 cm². Para llenar 2 metros de tubo el nivel de
+  la garrafa baja <strong>menos de un milímetro</strong>. La referencia se queda quieta sola y no
+  tienes que mirarla nunca más.</p>
+</div>
+
+<figure>
+  <svg viewBox="0 0 640 250" role="img" aria-label="Esquema del nivel de agua con garrafa">
+    <!-- suelo en pendiente -->
+    <path d="M20 190 L340 205 L620 226" fill="none" stroke="#5a4a35" stroke-width="4"/>
+    <path d="M20 190 L340 205 L620 226 L620 250 L20 250 Z" fill="#3a2f22" opacity=".55"/>
+
+    <!-- estaca origen -->
+    <rect x="66" y="70" width="7" height="122" fill="#6b4f36"/>
+    <!-- garrafa -->
+    <rect x="46" y="66" width="48" height="58" rx="6" fill="none" stroke="#9aa7b4" stroke-width="2.5"/>
+    <rect x="46" y="88" width="48" height="36" rx="4" fill="#e5646b" opacity=".55"/>
+    <line x1="40" y1="88" x2="100" y2="88" stroke="#5ee1a0" stroke-width="2" stroke-dasharray="4 3"/>
+
+    <!-- plano de agua -->
+    <line x1="40" y1="88" x2="560" y2="88" stroke="#5ee1a0" stroke-width="1.6" stroke-dasharray="7 6"/>
+    <text x="250" y="79" fill="#5ee1a0" font-size="13" font-family="system-ui" text-anchor="middle">plano del agua</text>
+
+    <!-- mira -->
+    <rect x="440" y="55" width="13" height="158" fill="#c9a227" opacity=".9"/>
+    <g stroke="#3a2f22" stroke-width="1.4">
+      <line x1="440" y1="80" x2="453" y2="80"/><line x1="440" y1="105" x2="453" y2="105"/>
+      <line x1="440" y1="130" x2="453" y2="130"/><line x1="440" y1="155" x2="453" y2="155"/>
+      <line x1="440" y1="180" x2="453" y2="180"/>
+    </g>
+
+    <!-- tubo: sube por fuera de la mira para que se vea el recorrido del agua -->
+    <path d="M70 100 C 150 180, 300 220, 462 210 L462 88" fill="none" stroke="#e5646b"
+          stroke-width="3.5" opacity=".85" stroke-linejoin="round"/>
+    <circle cx="462" cy="88" r="4" fill="#e5646b"/>
+
+    <!-- lectura -->
+    <line x1="470" y1="88" x2="548" y2="88" stroke="#4ea8de" stroke-width="1.2"/>
+    <line x1="456" y1="211" x2="548" y2="211" stroke="#4ea8de" stroke-width="1.2"/>
+    <path d="M542 94 L542 205" stroke="#4ea8de" stroke-width="2"/>
+    <path d="M538 94 L542 86 L546 94 M538 205 L542 213 L546 205" fill="none" stroke="#4ea8de" stroke-width="1.6"/>
+    <text x="556" y="154" fill="#4ea8de" font-size="15" font-family="system-ui" font-weight="600">L</text>
+
+    <text x="70" y="140" fill="#9aa7b4" font-size="13" font-family="system-ui" text-anchor="middle">garrafa 5 L</text>
+    <text x="70" y="158" fill="#9aa7b4" font-size="13" font-family="system-ui" text-anchor="middle">extremo fijo</text>
+    <text x="452" y="238" fill="#9aa7b4" font-size="13" font-family="system-ui" text-anchor="middle">mira que paseas</text>
+  </svg>
+  <figcaption>El agua de la garrafa y la del listón están siempre a la misma altura.
+  Cuanto más bajo el terreno, mayor la lectura <code>L</code> en la mira.</figcaption>
+</figure>
+
+<h2><span class="num">3.</span> Preparación en casa</h2>
+<ol>
+  <li><strong>Monta la mira.</strong> Pega el flexómetro al listón con el <strong>cero justo en el
+  extremo que va a apoyar en el suelo</strong>. Comprueba que no queda un milímetro de holgura: ese
+  milímetro se te cuela en las 45 lecturas. Pega el nivel de burbuja en una cara.</li>
+
+  <li><strong>Ata el tubo a la mira</strong> con las dos bridas, de forma que el tubo suba pegado al
+  listón y su boca quede por encima de los 2 m. Así lees el agua justo al lado de la escala, sin
+  paralaje, y con las dos manos libres.</li>
+
+  <li><strong>Llena el tubo.</strong> Echa el colorante en un cubo de agua y mete el tubo entero
+  dentro; sopla por un extremo hasta que salga agua por el otro sin burbujas. Es mucho más limpio que
+  intentarlo con el grifo.</li>
+
+  <li><strong>Busca burbujas a contraluz</strong> estirando el tubo por el pasillo. Una burbuja de un
+  centímetro puede darte un error de varios centímetros. Si hay, inclina el tubo y empújalas hacia
+  fuera con más agua.</li>
+
+  <li><strong>Enróllalo con los dos extremos tapados</strong> (un tapón, un tornillo o cinta). Si
+  entra aire durante el viaje, tendrás que volver a empezar en la parcela.</li>
+
+  <li><strong>Marca la cuerda cada metro</strong> con cinta, usando un color distinto cada 5 m.
+  Tender esa cuerda ya te da todas las estaciones de una fila sin volver a medir con la cinta: es
+  lo que más tiempo te va a ahorrar del día.</li>
+</ol>
+
+<h2><span class="num">4.</span> Montaje en la parcela <span class="pill">20 min</span></h2>
+<ol>
+  <li><strong>Clava la estaca del origen</strong> en la esquina izquierda del frente, mirando desde
+  la calle. Ese es el <code>(0,0)</code> y no se toca en todo el día.</li>
+
+  <li><strong>Replantea los ejes.</strong> Cinta por el frente para la X, cinta hacia el fondo para
+  la Y. Comprueba la escuadra con el <strong>3-4-5</strong>: 3 m sobre un eje, 4 m sobre el otro, la
+  diagonal entre las dos marcas debe dar 5 m clavados.</li>
+
+  <li><strong>Recorre la parcela a ojo y localiza el punto más alto.</strong> Este paso parece tonto
+  y es el que decide si el método funciona.</li>
+
+  <li><strong>Cuelga la garrafa a unos 40 cm por encima de ese punto más alto</strong>, atada a una
+  estaca junto al origen.</li>
+</ol>
+
+<div class="box warn">
+  <p><strong>Por qué la altura de la garrafa es crítica.</strong> La mira solo puede leer entre
+  0 y 2 m. Si pones la garrafa demasiado baja, en las zonas hundidas el agua se te sale por encima
+  del listón y no puedes leer. Si la pones demasiado alta, en las zonas altas el agua no llega
+  siquiera a subir por el tubo.</p>
+  <p>Con la garrafa a 40 cm sobre el punto más alto, cubres un desnivel total de <strong>1,60 m</strong>
+  con una mira de 2 m. Para una parcela de 32 m de fondo eso da hasta un 5 % de pendiente de sobra.
+  Si tu parcela cae más que eso, súbela sobre una escalera de tijera y usa una mira de 3 m, o parte
+  el trabajo en dos montajes (la app lleva la cuenta del cero: mira lo del <em>origen</em> en el
+  punto 6).</p>
+</div>
+
+<ol start="5">
+  <li><strong>Mete el extremo fijo del tubo hasta el fondo de la garrafa</strong> y sujétalo con
+  cinta al asa. Tiene que quedar sumergido pase lo que pase: si la boca se queda al aire, entra
+  aire y pierdes la referencia. Un tornillo atado al extremo como lastre lo asegura.</li>
+
+  <li><strong>Toma la lectura de referencia.</strong> Lleva la mira a la esquina del origen
+  (<code>E1</code>), apóyala, espera y lee. Ese número en centímetros es tu <code>L<sub>ref</sub></code>.
+  Métela en la app: en el modo de medición rápida, toca la línea
+  <code>ref … · origen …</code> y escríbela. Deja <em>origen</em> en 0.</li>
+</ol>
+
+<h2><span class="num">5.</span> Medir <span class="pill">≈ 70 min</span> <span class="pill">45 estaciones</span></h2>
+
+<p>Abre en la app <strong>Cotas ▸ ⚡ Modo medición rápida</strong>. Te va cantando la estación
+siguiente y solo tienes que teclear la lectura. En cada punto:</p>
+
+<ol>
+  <li>Apoya el listón en el suelo y <strong>míralo en la burbuja</strong>. Inclinarlo siempre hace
+  que midas de más, nunca de menos, así que es un error que se acumula en una sola dirección si te
+  descuidas.</li>
+  <li><strong>Espera de 5 a 10 segundos.</strong> El agua oscila un rato largo en 40 metros de tubo.
+  Leer antes de tiempo es la causa número uno de lecturas malas.</li>
+  <li>Lee la <strong>parte de abajo del menisco</strong> (la curva que hace el agua), siempre la
+  misma, y siempre con el ojo a la altura del agua.</li>
+  <li>Teclea los centímetros y pulsa <strong>Guardar y siguiente</strong>. La app hace la resta y te
+  manda a la estación de al lado.</li>
+</ol>
+
+<h3>Además de la malla, mide siempre</h3>
+<p>Diez de estos valen más que cien puntos de malla, porque son los sitios donde el terreno
+<em>cambia</em>, y una malla regular se los salta:</p>
+<ul>
+  <li>El bordillo y el eje de la calle, para saber cuánto tienes que subir o bajar al entrar.</li>
+  <li>La parte alta y la baja de cualquier talud o desnivel brusco — las dos, y pegadas.</li>
+  <li>El fondo de las vaguadas, por donde te va a correr el agua de lluvia.</li>
+  <li>La base de cada árbol.</li>
+  <li>Arquetas, pozos, registros, la base de los postes.</li>
+</ul>
+<p>En el modo rápido, pulsa <strong>Quiebre</strong> antes de guardar y quedan marcados como tales.</p>
+
+<div class="box">
+  <p><strong>Comprueba el cierre cada 3 o 4 filas.</strong> Vuelve a un punto que ya hayas medido y
+  míde<span></span>lo otra vez sin mirar el valor anterior. Si difiere más de 2 cm, párate: o se ha
+  metido una burbuja, o la boca de la garrafa se ha quedado al aire, o el listón no estaba vertical.
+  Arreglarlo en ese momento cuesta cinco minutos; descubrirlo en casa significa volver.</p>
+</div>
+
+<h2><span class="num">6.</span> Cuánto error vas a tener</h2>
+<table>
+  <thead><tr><th>Fuente</th><th>Error típico</th><th>¿Se acumula?</th></tr></thead>
+  <tbody>
+    <tr><td>Leer el menisco</td><td>±2 mm</td><td>No</td></tr>
+    <tr><td>Listón no del todo vertical (2°)</td><td>+1 mm</td><td>No</td></tr>
+    <tr><td>Agua sin estabilizar del todo</td><td>±3 mm</td><td>No</td></tr>
+    <tr><td>Apoyo del listón en hierba o tierra suelta</td><td>±10 mm</td><td>No</td></tr>
+    <tr><td>Burbuja no detectada</td><td>hasta 50 mm</td><td>Sí, hasta que la quitas</td></tr>
+  </tbody>
+</table>
+<p>Sumando en cuadratura lo normal, sales con <strong>±1,1 cm por punto</strong>, cinco veces mejor de
+lo que necesitas. El único error que de verdad te puede estropear el trabajo es la burbuja, y por
+eso las comprobaciones de cierre no son opcionales.</p>
+
+<div class="box bad">
+  <p><strong>Lo que sí arruina el levantamiento</strong>, por orden de probabilidad:</p>
+  <ol style="margin-bottom:0">
+    <li><strong>Burbujas.</strong> Revisa el tubo a contraluz antes de salir y otra vez a media mañana.</li>
+    <li><strong>La boca de la garrafa fuera del agua.</strong> Lástrala y compruébalo al pasar.</li>
+    <li><strong>El tubo al sol dos horas.</strong> El agua desgasifica y aparecen burbujas nuevas de
+    la nada. Si puedes, deja el rollo sobrante a la sombra.</li>
+    <li><strong>Pisar el tubo.</strong> Con el pie encima no se estabiliza y te vuelves loco
+    esperando. Recógelo hacia ti según avanzas.</li>
+    <li><strong>No exportar al terminar.</strong> Los datos viven en el móvil. <em>Datos ▸ Todo +
+    fotos (.zip)</em> antes de arrancar el coche.</li>
+  </ol>
+</div>
+
+<h2><span class="num">7.</span> Antes de irte</h2>
+<ul class="chk">
+  <li>Vuelve a <code>E1</code> y mídelo otra vez. Tiene que dar <code>0,000</code> ± 2 cm.</li>
+  <li>Comprueba en <em>Datos</em> que el desnivel total y la pendiente media cuadran con lo que has visto con los ojos.</li>
+  <li>Marca en el mapa los árboles y saca las fotos hasta que la cobertura llegue al 100 %.</li>
+  <li>Exporta <strong>Todo + fotos (.zip)</strong>.</li>
+  <li>Deja la estaca del origen clavada y bien visible. Si algún día vuelves a medir, sin ella no puedes enlazar nada.</li>
+</ul>
+
+<h3 class="no-print">Para llevártelo</h3>
+<p class="no-print">Esta página está pensada para imprimirse en un folio: <strong>Ctrl+P</strong> o
+Compartir ▸ Imprimir. En la parcela, con las manos mojadas y el móvil en el bolsillo, el papel gana.</p>
+
+<p style="margin-top:34px;color:var(--txt2);font-size:13px">
+Parcela de La Navata · 15,50 × 32 m · 496 m² · malla de 4 × 4 m, 45 estaciones ·
+<a href="index.html" style="color:var(--accent)">volver a la aplicación</a>
+</p>
+
+</div>
+</body>
+</html>

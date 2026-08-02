@@ -7,6 +7,7 @@ const CACHE = 'navata-v1';
 const ASSETS = [
   './',
   './index.html',
+  './procedimiento.html',
   './manifest.webmanifest',
   './assets/icon.svg',
   './assets/css/app.css',
