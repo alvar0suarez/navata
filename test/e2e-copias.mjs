@@ -40,7 +40,10 @@ for (const L of lecturas){
 }
 await p.click('#q-close'); await p.waitForTimeout(400);
 const original = await st();
-ok('hay datos que salvar', original.nPoints===8 && original.pend===40 && original.drop>0.5,
+const original_total = original.nPoints + original.pend;
+// La malla depende del tamaño de la parcela: se comprueba en relativo
+const TOTAL = original_total;
+ok('hay datos que salvar', original.nPoints===8 && original.pend===TOTAL-8 && original.drop>0.5,
    `${original.nPoints} cotas, ${original.pend} pendientes, Δ ${original.drop.toFixed(3)} m`);
 
 // ── exportar ──
@@ -53,7 +56,7 @@ await file.saveAs(ruta);
 const json = JSON.parse(await (await import('node:fs/promises')).readFile(ruta,'utf8'));
 ok('el .json contiene las alturas', json.points.length===8 && json.points.every(q=>Number.isFinite(q.z)),
    json.points.length+' cotas con Z');
-ok('el .json contiene la malla pendiente', json.pending.length===40 &&
+ok('el .json contiene la malla pendiente', json.pending.length===TOTAL-8 &&
    json.pending.every(q=>Number.isFinite(q.x)&&Number.isFinite(q.y)&&Number.isFinite(q.d)),
    json.pending.length+' estaciones con posición en el tendido');
 ok('el .json contiene el borde y los ajustes',
@@ -81,7 +84,7 @@ const rest = await st();
 ok('restaura las alturas exactas',
    rest.nPoints===8 && Math.abs(rest.drop-original.drop)<1e-9 && Math.abs(rest.zmin-original.zmin)<1e-9,
    `${rest.nPoints} cotas, Δ ${rest.drop.toFixed(3)} m (original ${original.drop.toFixed(3)}), mín ${rest.zmin.toFixed(3)}`);
-ok('restaura la malla pendiente', rest.pend===40, rest.pend+'');
+ok('restaura la malla pendiente', rest.pend===TOTAL-8, rest.pend+'');
 
 // ── combinar: cargar el mismo fichero no debe duplicar nada ──
 await p.click('[data-view="data"]'); await p.waitForTimeout(300);

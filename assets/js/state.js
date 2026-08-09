@@ -9,14 +9,14 @@ export const SCHEMA = 1;
 
 /**
  * Medidas de la parcela tomadas en campo: 15,50 m de frente a la calle por
- * 32 m de fondo. El proyecto arranca con este borde ya puesto para no tener que
+ * 30 m de fondo. El proyecto arranca con este borde ya puesto para no tener que
  * teclearlo estando allí.
  *
  * Se registra como rectángulo porque es lo que se midió. Si las esquinas no
  * salen a escuadra, se corrigen los vértices con la herramienta ⬡ del mapa o se
  * rehace el borde en Datos con los cuatro lados.
  */
-export const PARCELA = { ancho: 15.5, fondo: 32 };
+export const PARCELA = { ancho: 15.5, fondo: 30 };
 
 const bordePorDefecto = () => [
   { x: 0, y: 0 },

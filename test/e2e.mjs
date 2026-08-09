@@ -29,7 +29,7 @@ await step('carga inicial', async () => {
     const { stats } = await import('./assets/js/state.js');
     return stats();
   });
-  if (Math.abs(st.area - 496) > 0.01) throw new Error('superficie inesperada: ' + st.area);
+  if (Math.abs(st.area - 465) > 0.01) throw new Error('superficie inesperada: ' + st.area);
   console.log(`       parcela por defecto: ${st.area} m²`);
 });
 

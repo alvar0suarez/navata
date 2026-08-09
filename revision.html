@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12161c">
+<title>Revisar cotas · La Navata</title>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#0d1117; --panel:#171d26; --panel2:#1e2631; --line:#2a3441;
+  --txt:#e6edf3; --txt2:#9aa7b4; --accent:#4ea8de; --accent2:#5ee1a0;
+  --warn:#f0a35e; --danger:#e5646b;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--txt);
+  font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:40px}
+.wrap{max-width:1100px;margin:0 auto;padding:0 14px}
+header{background:linear-gradient(160deg,#16202b,#0d1117);border-bottom:1px solid var(--line);
+  padding:20px 0 16px;margin-bottom:16px}
+h1{font-size:21px;margin:0 0 4px}
+.lead{color:var(--txt2);font-size:14px;margin:0}
+a.back{color:var(--accent);text-decoration:none;font-size:13.5px;display:inline-block;margin-bottom:10px}
+
+.layout{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:900px){.layout{grid-template-columns:minmax(0,420px) minmax(0,1fr)}}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{font-size:14px;margin:0 0 10px;font-weight:650}
+
+/* ── mapa ── */
+#plano{width:100%;aspect-ratio:15.5/30;background:#0a0e13;border-radius:10px;display:block;
+  border:1px solid var(--line)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.stat b{display:block;font-size:16px;font-variant-numeric:tabular-nums;color:var(--accent)}
+.stat span{font-size:10.5px;color:var(--txt2)}
+
+/* ── tabla ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:3px;text-align:center}
+th{color:var(--txt2);font-size:11px;font-weight:600}
+th.y,td.y{text-align:right;color:var(--txt2);font-size:11.5px;
+  font-variant-numeric:tabular-nums;padding-right:7px;white-space:nowrap}
+input[type=number]{
+  width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+  border-radius:7px;padding:7px 2px;font-size:15px;text-align:center;
+  font-variant-numeric:tabular-nums;font-family:inherit;
+  /* Sin esto, el ancho intrínseco del input desborda la pantalla del móvil */
+  min-width:0;
+}
+/* Chrome reserva sitio para las flechitas aunque no se vean */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+table{table-layout:fixed}
+th.y,td.y{width:52px}
+@media(max-width:520px){
+  input[type=number]{font-size:14px;padding:7px 1px}
+  th{font-size:10px}
+  th.y,td.y{width:40px;font-size:10.5px;padding-right:4px}
+  th,td{padding:2px 1px}
+}
+input[type=number]:focus{outline:none;border-color:var(--accent);background:#101720}
+input.dudosa{border-color:var(--warn);background:#221a12}
+input.fija{opacity:.55}
+tr.calle td{padding-top:8px}
+tr.calle .y{color:var(--warn);font-weight:650}
+
+.off-row td{padding-top:9px}
+.off{display:flex;gap:3px;align-items:center;justify-content:center}
+.off button{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  border-radius:6px;width:26px;height:28px;font-size:14px;padding:0;cursor:pointer}
+.off span{font-size:11.5px;color:var(--txt2);min-width:44px;font-variant-numeric:tabular-nums}
+.off span.on{color:var(--accent2);font-weight:650}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button.act{flex:1 1 auto;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  border-radius:9px;padding:11px 12px;font-size:13.5px;cursor:pointer}
+button.act.primary{background:var(--accent);border-color:var(--accent);color:#06121c;font-weight:650}
+button.act.warn{border-color:var(--warn);color:var(--warn)}
+
+.nota{font-size:12.5px;color:var(--txt2);margin:10px 0 0}
+.nota b{color:var(--warn)}
+.leyenda{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--txt2);margin-top:10px}
+.leyenda i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+
+#perfil{width:100%;height:170px;display:block;background:var(--bg);
+  border:1px solid var(--line);border-radius:9px}
+select{background:var(--bg);border:1px solid var(--line);color:var(--txt);
+  border-radius:7px;padding:7px 9px;font-size:13.5px;font-family:inherit}
+</style>
+</head>
+<body>
+
+<header><div class="wrap">
+  <a class="back" href="index.html">← Volver a la aplicación</a>
+  <h1>Revisar las cotas de la libreta</h1>
+  <p class="lead">Toca cualquier número y el plano se recalcula al momento. Las flechas de abajo
+  suben o bajan una línea entera, para probar si estaba mal referenciada.</p>
+</div></header>
+
+<div class="wrap layout">
+
+  <div class="card">
+    <h2>Cotas medidas (m)</h2>
+    <table id="tabla"></table>
+
+    <div class="leyenda">
+      <span><i style="background:var(--warn)"></i>cotas que no me cuadran</span>
+      <span><i style="background:var(--line)"></i>fondo, fijado a 0 por ti</span>
+    </div>
+
+    <div class="btn-row">
+      <button class="act warn" id="hipotesis">Probar: bajar 0,86 el linde izquierdo</button>
+    </div>
+    <div class="btn-row">
+      <button class="act" id="reset">Valores de la libreta</button>
+      <button class="act primary" id="descargar">Descargar .json</button>
+    </div>
+    <p class="nota">El <b>+0,53</b> del linde izquierdo a 20 m de la calle es el que canta:
+    está 1,38 m por encima de su vecino de la derecha, a solo 4,10 m. Si ahí no hay un caballón
+    de verdad, esas tres cotas de arriba no están unificadas con el resto de la parcela.</p>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Plano de curvas de nivel</h2>
+      <canvas id="plano"></canvas>
+      <div class="stats" id="stats"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Perfil a lo largo <select id="selPerfil"></select></h2>
+      <canvas id="perfil"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { buildSurface, contours, hypsoColor, hillshade, polyArea } from './assets/js/geom.js';
+
+/* ── datos de la libreta ─────────────────────────────────────────────────
+   x: desde el linde derecho → 2,10 m; +4 m; +5,3 m; y el linde izquierdo.
+   y: 0 en la calle, 30 en el fondo. Cotas relativas con el fondo a 0.      */
+const LINEAS = [
+  { n: 'L4', x: 0,     nota: 'linde izquierdo' },
+  { n: 'L3', x: 4.10,  nota: '' },
+  { n: 'L2', x: 9.40,  nota: '' },
+  { n: 'L1', x: 13.40, nota: 'a 2,10 m del linde derecho' },
+];
+const YS = [30, 25, 20, 15, 10, 5, 0];
+const LIBRETA = [
+  [ 0.00,  0.00,  0.00,  0.00],
+  [-0.33, -0.50, -0.50, -0.59],
+  [ 0.53, -0.85, -0.82, -0.91],
+  [-0.08, -0.20, -0.57, -0.82],
+  [-0.78, -0.15, -0.19, -0.30],
+  [-0.73, -0.30, -0.18, -0.04],
+  [-0.75, -0.64, -0.35, -0.01],
+];
+// Celdas cuya altura de cuerda implícita no cuadra con el resto de su línea
+const DUDOSAS = new Set(['1,0', '2,0', '3,0', '4,3', '5,3']);
+
+const ANCHO = 15.5, FONDO = 30;
+const BORDE = [{x:0,y:0},{x:ANCHO,y:0},{x:ANCHO,y:FONDO},{x:0,y:FONDO}];
+const INTERVALO = 0.1;
+
+let Z = LIBRETA.map(f => f.slice());
+let OFF = [0, 0, 0, 0];
+
+const fmt = (v, d = 2) => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(d).replace('.', ',');
+const fmtN = (v, d = 1) => v.toFixed(d).replace('.', ',');
+
+/* ── tabla ── */
+function pintarTabla() {
+  const t = document.getElementById('tabla');
+  let h = '<tr><th class="y">m</th>' + LINEAS.map(l =>
+    `<th>${l.n}<br><span style="font-weight:400">x ${fmtN(l.x, 2)}</span></th>`).join('') + '</tr>';
+
+  YS.forEach((y, i) => {
+    const clase = y === 0 ? ' class="calle"' : '';
+    h += `<tr${clase}><td class="y">${y}${y === 0 ? ' calle' : y === 30 ? ' fondo' : ''}</td>`;
+    LINEAS.forEach((l, j) => {
+      const cls = [i === 0 ? 'fija' : '', DUDOSAS.has(`${i},${j}`) ? 'dudosa' : ''].join(' ').trim();
+      h += `<td><input type="number" step="0.01" inputmode="decimal" data-i="${i}" data-j="${j}"
+             class="${cls}" value="${Z[i][j].toFixed(2)}"></td>`;
+    });
+    h += '</tr>';
+  });
+
+  h += '<tr class="off-row"><td class="y">mover</td>' + LINEAS.map((l, j) =>
+    `<td><div class="off">
+       <button data-off="${j}" data-d="-0.05">−</button>
+       <span id="off${j}">0</span>
+       <button data-off="${j}" data-d="0.05">+</button>
+     </div></td>`).join('') + '</tr>';
+
+  t.innerHTML = h;
+
+  t.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+    const v = parseFloat(inp.value.replace(',', '.'));
+    if (Number.isFinite(v)) { Z[+inp.dataset.i][+inp.dataset.j] = v; dibujar(); }
+  }));
+  t.querySelectorAll('[data-off]').forEach(b => b.addEventListener('click', () => {
+    const j = +b.dataset.off, d = +b.dataset.d;
+    OFF[j] = Math.round((OFF[j] + d) * 100) / 100;
+    for (let i = 0; i < YS.length; i++) Z[i][j] = Math.round((Z[i][j] + d) * 100) / 100;
+    sincronizar();
+    dibujar();
+  }));
+}
+
+function sincronizar() {
+  document.querySelectorAll('#tabla input').forEach(inp => {
+    inp.value = Z[+inp.dataset.i][+inp.dataset.j].toFixed(2);
+  });
+  OFF.forEach((o, j) => {
+    const el = document.getElementById('off' + j);
+    el.textContent = o ? fmt(o) : '0';
+    el.classList.toggle('on', !!o);
+  });
+}
+
+/* ── superficie ── */
+function puntos() {
+  const p = [];
+  YS.forEach((y, i) => LINEAS.forEach((l, j) => p.push({ x: l.x, y, z: Z[i][j] })));
+  return p;
+}
+
+function dibujar() {
+  const pts = puntos();
+  const surf = buildSurface(pts, BORDE, { res: 0.2 });
+  const cont = contours(surf, INTERVALO);
+  pintarPlano(surf, cont, pts);
+  pintarStats(pts, surf);
+  pintarPerfil();
+}
+
+function pintarPlano(surf, cont, pts) {
+  const cv = document.getElementById('plano');
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  const pad = 30;
+  const s = Math.min((W - pad * 2) / ANCHO, (H - pad * 2) / FONDO);
+  const ox = (W - ANCHO * s) / 2, oy = (H - FONDO * s) / 2;
+  const X = x => ox + x * s;
+  const Y = y => oy + (FONDO - y) * s;    // y=0 (calle) abajo
+
+  // relieve
+  if (!surf.empty) {
+    const { nx, ny, z } = surf;
+    const img = new ImageData(nx, ny), d = img.data;
+    const span = Math.max(surf.zmax - surf.zmin, 1e-4);
+    const hs = hillshade(surf, 3);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const si = (ny - 1 - j) * nx + i, di = (j * nx + i) * 4;
+      const v = z[si];
+      if (Number.isNaN(v)) { d[di + 3] = 0; continue; }
+      let c = hypsoColor((v - surf.zmin) / span);
+      const sh = hs[si];
+      const f = Number.isNaN(sh) ? 1 : 0.45 + 0.75 * sh;
+      d[di] = Math.min(255, c[0] * f); d[di+1] = Math.min(255, c[1] * f);
+      d[di+2] = Math.min(255, c[2] * f); d[di+3] = 245;
+    }
+    const off = document.createElement('canvas');
+    off.width = nx; off.height = ny;
+    off.getContext('2d').putImageData(img, 0, 0);
+    const cell = surf.res * s;
+    g.imageSmoothingEnabled = true;
+    g.drawImage(off, X(surf.x0) - cell / 2, Y(surf.y0 + (ny - 1) * surf.res) - cell / 2, nx * cell, ny * cell);
+  }
+
+  // curvas
+  g.lineJoin = 'round';
+  for (const c of cont) {
+    const maestra = Math.abs(Math.round(c.level / INTERVALO) % 5) === 0;
+    g.beginPath();
+    for (const l of c.lines) {
+      if (l.length < 2) continue;
+      g.moveTo(X(l[0].x), Y(l[0].y));
+      for (let i = 1; i < l.length; i++) g.lineTo(X(l[i].x), Y(l[i].y));
+    }
+    g.strokeStyle = maestra ? 'rgba(255,236,190,.95)' : 'rgba(200,220,240,.45)';
+    g.lineWidth = maestra ? 1.6 : .8;
+    g.stroke();
+    if (maestra) {
+      const l = c.lines.find(q => q.length > 12);
+      if (l) {
+        const m = l[Math.floor(l.length / 2)];
+        g.font = '600 10px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        const t = fmt(c.level);
+        const w = g.measureText(t).width;
+        g.fillStyle = 'rgba(10,14,19,.85)';
+        g.fillRect(X(m.x) - w / 2 - 3, Y(m.y) - 6.5, w + 6, 13);
+        g.fillStyle = '#ffecbe'; g.fillText(t, X(m.x), Y(m.y) + .5);
+      }
+    }
+  }
+
+  // borde y calle
+  g.strokeStyle = '#e6edf3'; g.lineWidth = 2;
+  g.strokeRect(X(0), Y(FONDO), ANCHO * s, FONDO * s);
+  g.strokeStyle = '#f0a35e'; g.lineWidth = 5; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(X(0), Y(0)); g.lineTo(X(ANCHO), Y(0)); g.stroke();
+  g.font = '600 11px system-ui'; g.fillStyle = '#f0a35e'; g.textAlign = 'center';
+  g.fillText('CALLE', X(ANCHO / 2), Y(0) + 16);
+
+  // cotas
+  g.font = '600 9.5px system-ui'; g.textBaseline = 'middle';
+  for (const p of pts) {
+    g.beginPath(); g.arc(X(p.x), Y(p.y), 3.4, 0, 7);
+    g.fillStyle = '#4ea8de'; g.fill();
+    g.strokeStyle = '#0a0e13'; g.lineWidth = 1.4; g.stroke();
+    const t = fmt(p.z);
+    const w = g.measureText(t).width;
+    g.fillStyle = 'rgba(10,14,19,.82)';
+    g.fillRect(X(p.x) - w / 2 - 2.5, Y(p.y) - 16, w + 5, 12);
+    g.fillStyle = '#e6edf3'; g.textAlign = 'center';
+    g.fillText(t, X(p.x), Y(p.y) - 10);
+  }
+}
+
+function pintarStats(pts, surf) {
+  const zs = pts.map(p => p.z);
+  const zmin = Math.min(...zs), zmax = Math.max(...zs);
+  // Mayor salto entre dos cotas contiguas: es lo que delata una línea mal referenciada
+  let salto = 0, dondeSalto = '';
+  for (let i = 0; i < YS.length; i++) for (let j = 0; j < LINEAS.length - 1; j++) {
+    const d = Math.abs(Z[i][j] - Z[i][j + 1]);
+    const dist = LINEAS[j + 1].x - LINEAS[j].x;
+    if (d / dist > salto) { salto = d / dist; dondeSalto = `${LINEAS[j].n}–${LINEAS[j+1].n} a ${YS[i]} m`; }
+  }
+  document.getElementById('stats').innerHTML = [
+    ['Superficie', fmtN(polyArea(BORDE), 0) + ' m²'],
+    ['Desnivel', fmtN(zmax - zmin, 2) + ' m'],
+    ['Cota mín.', fmt(zmin)],
+    ['Cota máx.', fmt(zmax)],
+    ['Pendiente máx. transversal', fmtN(salto * 100, 0) + ' %'],
+    ['', dondeSalto],
+  ].filter(r => r[0]).map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('') +
+    `<div class="stat"><b style="font-size:12px">${dondeSalto}</b><span>dónde</span></div>`;
+}
+
+/* ── perfil ── */
+function pintarPerfil() {
+  const j = +document.getElementById('selPerfil').value;
+  const cv = document.getElementById('perfil');
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  const vals = YS.map((y, i) => ({ y, z: Z[i][j] })).sort((a, b) => a.y - b.y);
+  const zs = vals.map(v => v.z);
+  const lo = Math.min(...zs, 0) - .1, hi = Math.max(...zs, 0) + .1;
+  const L = 44, R = 12, T = 14, B = 26;
+  const X = y => L + y / FONDO * (W - L - R);
+  const Y = z => T + (hi - z) / (hi - lo) * (H - T - B);
+
+  g.strokeStyle = '#2a3441'; g.lineWidth = 1;
+  g.font = '9px system-ui'; g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (let k = 0; k <= 4; k++) {
+    const z = lo + (hi - lo) * k / 4;
+    g.beginPath(); g.moveTo(L, Y(z)); g.lineTo(W - R, Y(z)); g.stroke();
+    g.fillStyle = '#9aa7b4'; g.fillText(fmtN(z, 2), L - 5, Y(z));
+  }
+  g.beginPath();
+  g.moveTo(X(0), H - B);
+  vals.forEach(v => g.lineTo(X(v.y), Y(v.z)));
+  g.lineTo(X(FONDO), H - B); g.closePath();
+  g.fillStyle = 'rgba(94,225,160,.22)'; g.fill();
+  g.beginPath();
+  vals.forEach((v, i) => i ? g.lineTo(X(v.y), Y(v.z)) : g.moveTo(X(v.y), Y(v.z)));
+  g.strokeStyle = '#5ee1a0'; g.lineWidth = 2.2; g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'bottom';
+  vals.forEach(v => {
+    g.beginPath(); g.arc(X(v.y), Y(v.z), 3.5, 0, 7); g.fillStyle = '#5ee1a0'; g.fill();
+    g.fillStyle = '#e6edf3'; g.font = '600 10px system-ui';
+    g.fillText(fmt(v.z), X(v.y), Y(v.z) - 6);
+  });
+  g.fillStyle = '#f0a35e'; g.font = '600 10px system-ui';
+  g.fillText('CALLE', X(0) + 12, H - 4);
+  g.fillStyle = '#9aa7b4'; g.fillText('fondo', X(FONDO) - 12, H - 4);
+}
+
+/* ── acciones ── */
+document.getElementById('reset').addEventListener('click', () => {
+  Z = LIBRETA.map(f => f.slice()); OFF = [0, 0, 0, 0];
+  sincronizar(); dibujar();
+});
+
+document.getElementById('hipotesis').addEventListener('click', () => {
+  // Las tres cotas de arriba del linde izquierdo comparten una referencia (1,09 m)
+  // distinta de las de abajo. Si no estaban unificadas, van desplazadas en bloque.
+  [1, 2, 3].forEach(i => { Z[i][0] = Math.round((LIBRETA[i][0] - 0.86) * 100) / 100; });
+  sincronizar(); dibujar();
+});
+
+document.getElementById('descargar').addEventListener('click', () => {
+  const pts = [];
+  let n = 0;
+  YS.forEach((y, i) => LINEAS.forEach((l, j) => pts.push({
+    id: 'r' + (++n), x: l.x, y, z: Z[i][j],
+    label: `${l.n}·${y}`, type: 'grid', method: 'line', ts: new Date().toISOString(),
+  })));
+  const p = {
+    schema: 1, id: 'navata', name: 'La Navata', place: '',
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    visitDate: '2026-08-09',
+    notes: 'Levantamiento con cuerda nivelada. Cotas relativas con el fondo a 0. Calle al sur.',
+    anchor: null, boundary: BORDE, boundaryAssumed: null, streetEdge: 0,
+    points: pts, pending: [], trees: [], photos: [],
+    settings: { contourInterval: INTERVALO, gridDx: 4.1, gridDy: 5, gridOrder: 'cols', nLines: 4,
+      metodo: 'cuerda', alturaCuerda: 1, flechaCuerda: 0, refReading: 100, refOffset: 0,
+      res: 0.2, idwPower: 2.2 },
+  };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(p, null, 1)], { type: 'application/json' }));
+  a.download = 'la-navata.json';
+  a.click();
+});
+
+document.getElementById('selPerfil').innerHTML = LINEAS.map((l, j) =>
+  `<option value="${j}"${j === 0 ? ' selected' : ''}>${l.n} · x ${fmtN(l.x, 2)} m${l.nota ? ' (' + l.nota + ')' : ''}</option>`).join('');
+document.getElementById('selPerfil').addEventListener('change', pintarPerfil);
+
+pintarTabla();
+dibujar();
+window.addEventListener('resize', dibujar);
+</script>
+</body>
+</html>

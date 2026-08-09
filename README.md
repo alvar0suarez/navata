@@ -8,7 +8,8 @@ app (PWA), todo se guarda en el propio dispositivo y al terminar se exporta a lo
 que entienden Google Earth, QGIS, AutoCAD, SketchUp o Blender.
 
 👉 **[Abrir la aplicación](https://alvar0suarez.github.io/navata/)** ·
-📄 **[Material y procedimiento](https://alvar0suarez.github.io/navata/procedimiento.html)**
+📄 **[Material y procedimiento](https://alvar0suarez.github.io/navata/procedimiento.html)** ·
+📐 **[Revisar las cotas](https://alvar0suarez.github.io/navata/revision.html)**
 
 Ábrela en el móvil y añádela a la pantalla de inicio: se precarga entera y funciona
 sin cobertura. Hazlo **con conexión, antes de ir a la parcela**.
@@ -110,7 +111,7 @@ Comprobaciones:
 
 ```bash
 npm test          # geometría: 39 comprobaciones sin navegador
-npm run test:e2e  # 115 comprobaciones en Chromium; levanta el servidor él mismo
+npm run test:e2e  # 122 comprobaciones en Chromium; levanta el servidor él mismo
 ```
 
 ### Estructura
@@ -131,19 +132,22 @@ assets/js/
   zip.js                escritor ZIP sin dependencias
   guide.js              metodología de campo
 procedimiento.html      material y procedimiento, imprimible
+revision.html           tabla editable de cotas con el plano en vivo
 ```
 
 ## La parcela
 
-**15,50 m de frente a la calle × 32 m de fondo — 496 m², 95 m de perímetro.**
+**15,50 m de frente a la calle × 30 m de fondo — 465 m².**
 
-El proyecto arranca con ese borde ya creado, así que al abrir la app en la parcela
-solo hay que generar la malla y empezar a medir. Con líneas cada 3 m y puntos cada 5 m
-salen **48 estaciones en seis tendidos**, algo más de una hora.
+Levantada el 9 de agosto de 2026 con cuerda nivelada: **cuatro tendidos a lo largo** y
+un punto cada 5 m, 28 cotas. Los tendidos están, desde el linde derecho, a 2,10 m,
++4 m, +5,3 m y en el linde izquierdo — `x = 13,40 · 9,40 · 4,10 · 0`, que suman los
+15,50 m de ancho. Las cotas son relativas con el **fondo a 0**.
 
-Está registrado como rectángulo porque es lo que se midió. Si las esquinas no
-resultan estar a escuadra, se corrigen arrastrando los vértices con la herramienta ⬡
-del mapa, o se rehace el borde en *Datos* con los cuatro lados y una diagonal.
+La página [revisar las cotas](https://alvar0suarez.github.io/navata/revision.html)
+tiene las 28 medidas en una tabla editable con el plano recalculándose en vivo, para
+depurar las que quedaron dudosas: cada tendido se autocomprueba porque `lectura + cota`
+debe dar la misma altura de cuerda en toda la línea.
 
 ## Bitácora
 

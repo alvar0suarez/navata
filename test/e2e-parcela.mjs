@@ -22,8 +22,8 @@ const st = await p.evaluate(async()=>{
   return {poly:P.cur.boundary, street:P.cur.streetEdge, ...stats()};
 });
 ok('borde ya creado', st.poly.length===4, JSON.stringify(st.poly));
-ok('superficie 496 m²', Math.abs(st.area-496)<0.01, st.area.toFixed(2)+' m²');
-ok('perímetro 95 m', Math.abs(st.perim-95)<0.01, st.perim.toFixed(2)+' m');
+ok('superficie 465 m²', Math.abs(st.area-465)<0.01, st.area.toFixed(2)+' m²');
+ok('perímetro 91 m', Math.abs(st.perim-91)<0.01, st.perim.toFixed(2)+' m');
 ok('la calle es el frente', st.street===0);
 console.log('     '+await p.textContent('#project-sub'));
 await p.screenshot({path:`${OUT}/15-parcela-real.png`});
@@ -38,7 +38,7 @@ await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.op
  await p.waitForTimeout(200);
 console.log('     '+await p.textContent('#g-info'));
 const n = await p.evaluate(async()=>(await import('./assets/js/state.js')).P.cur.pending.length);
-ok('malla 4×4 generada', n>=45 && n<=50, n+' estaciones');
+ok('malla generada', n>=40 && n<=48, n+' estaciones');
 
 // las 4 esquinas primero
 const first = await p.evaluate(async()=>(await import('./assets/js/state.js')).P.cur.pending.slice(0,5).map(q=>q.label+'('+q.x+','+q.y+')'));
@@ -53,7 +53,7 @@ const st2 = await p.evaluate(async()=>{
   const {P,stats}=await import('./assets/js/state.js');
   return {n:P.cur.boundary.length, area:stats().area, pend:P.cur.pending.length};
 });
-ok('persiste tras recargar', st2.n===4 && Math.abs(st2.area-496)<0.01 && st2.pend>=45,
+ok('persiste tras recargar', st2.n===4 && Math.abs(st2.area-465)<0.01 && st2.pend>=40,
    `${st2.area.toFixed(1)} m², ${st2.pend} pendientes`);
 
 await b.close();

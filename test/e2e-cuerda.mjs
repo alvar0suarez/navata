@@ -34,14 +34,14 @@ await p.evaluate(()=>{const d=document.querySelector('#more-points'); if(d) d.op
  await p.waitForTimeout(200);
 let st = await state();
 const malla = st.pend.filter(q=>q.label.startsWith('M'));
-ok('genera 48 estaciones', st.pend.length===48, st.pend.length+' ('+malla.length+' de malla + 4 esquinas)');
+ok('genera 42 estaciones', st.pend.length===42, st.pend.length+' ('+malla.length+' de malla + esquinas)');
 
 const xs=[...new Set(malla.map(q=>q.x))].sort((a,b)=>a-b);
 const ys=[...new Set(malla.map(q=>q.y))].sort((a,b)=>a-b);
 ok('6 líneas de cuerda', xs.length===6, 'X = '+xs.join(', '));
 ok('la última línea llega al borde', xs[xs.length-1]===15.5, String(xs[xs.length-1]));
-ok('8 puntos por línea', ys.length===8, 'Y = '+ys.join(', '));
-ok('la última fila llega al fondo', ys[ys.length-1]===32, String(ys[ys.length-1]));
+ok('7 puntos por línea', ys.length===7, 'Y = '+ys.join(', '));
+ok('la última fila llega al fondo', ys[ys.length-1]===30, String(ys[ys.length-1]));
 
 // cada línea se recorre entera antes de pasar a la siguiente
 const secuencia = malla.map(q=>q.x);
