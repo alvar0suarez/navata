@@ -111,7 +111,7 @@ Comprobaciones:
 
 ```bash
 npm test          # geometría: 39 comprobaciones sin navegador
-npm run test:e2e  # 122 comprobaciones en Chromium; levanta el servidor él mismo
+npm run test:e2e  # 132 comprobaciones en Chromium; levanta el servidor él mismo
 ```
 
 ### Estructura
@@ -132,7 +132,7 @@ assets/js/
   zip.js                escritor ZIP sin dependencias
   guide.js              metodología de campo
 procedimiento.html      material y procedimiento, imprimible
-revision.html           tabla editable de cotas con el plano en vivo
+revision.html           tabla editable de cotas, plano en vivo e informe para enviar
 ```
 
 ## La parcela
@@ -147,7 +147,12 @@ un punto cada 5 m, 28 cotas. Los tendidos están, desde el linde derecho, a 2,10
 La página [revisar las cotas](https://alvar0suarez.github.io/navata/revision.html)
 tiene las 28 medidas en una tabla editable con el plano recalculándose en vivo, para
 depurar las que quedaron dudosas: cada tendido se autocomprueba porque `lectura + cota`
-debe dar la misma altura de cuerda en toda la línea.
+debe dar la misma altura de cuerda en toda la línea. Pasando el dedo o el ratón por el
+plano se lee la cota interpolada de cualquier punto.
+
+De ahí sale también el **informe para enviar**: un `.html` de un solo fichero, con el
+plano y los perfiles dentro como imágenes, que se abre con doble clic en cualquier
+ordenador, no necesita conexión y trae su propio botón para guardarlo en PDF.
 
 ## Bitácora
 

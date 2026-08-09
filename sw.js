@@ -3,7 +3,7 @@
 // refrescándose en segundo plano cuando hay red (stale-while-revalidate).
 
 // Al cambiar esta versión hay que cambiar también APP_VERSION en app.js.
-const VERSION = '2026.08.09-5';
+const VERSION = '2026.08.09-6';
 const CACHE = 'navata-' + VERSION;
 
 const ASSETS = [

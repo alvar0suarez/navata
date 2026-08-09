@@ -31,7 +31,13 @@ a.back{color:var(--accent);text-decoration:none;font-size:13.5px;display:inline-
 
 /* ── mapa ── */
 #plano{width:100%;aspect-ratio:15.5/30;background:#0a0e13;border-radius:10px;display:block;
-  border:1px solid var(--line)}
+  border:1px solid var(--line);cursor:crosshair;touch-action:none}
+/* La lectura va debajo del plano, no encima: flotando taparía alguna cota */
+#lectura{display:flex;align-items:baseline;gap:10px;margin-top:10px;padding:8px 11px;
+  background:var(--bg);border:1px solid var(--line);border-radius:9px;min-height:42px}
+#lectura b{font-size:17px;font-variant-numeric:tabular-nums;color:var(--txt2)}
+#lectura.on b{color:var(--accent2)}
+#lectura span{font-size:11.5px;color:var(--txt2)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}
 .stat{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
 .stat b{display:block;font-size:16px;font-variant-numeric:tabular-nums;color:var(--accent)}
@@ -113,21 +119,23 @@ select{background:var(--bg);border:1px solid var(--line);color:var(--txt);
     </div>
 
     <div class="btn-row">
-      <button class="act warn" id="hipotesis">Probar: bajar 0,86 el linde izquierdo</button>
+      <button class="act primary" id="informe">📄 Descargar informe para enviar</button>
     </div>
     <div class="btn-row">
       <button class="act" id="reset">Valores de la libreta</button>
-      <button class="act primary" id="descargar">Descargar .json</button>
+      <button class="act" id="descargar">Descargar .json</button>
     </div>
-    <p class="nota">El <b>+0,53</b> del linde izquierdo a 20 m de la calle es el que canta:
-    está 1,38 m por encima de su vecino de la derecha, a solo 4,10 m. Si ahí no hay un caballón
-    de verdad, esas tres cotas de arriba no están unificadas con el resto de la parcela.</p>
+    <p class="nota">Marcadas en naranja las cotas cuya altura de cuerda implícita
+    (<i>lectura + cota</i>) no coincide con la del resto de su línea. En el linde izquierdo
+    hay cuatro referencias distintas, así que es la línea a vigilar.</p>
   </div>
 
   <div>
     <div class="card">
       <h2>Plano de curvas de nivel</h2>
       <canvas id="plano"></canvas>
+      <div id="lectura"><b>—</b><span>pasa el dedo o el ratón por el plano para leer la cota
+      de cualquier punto</span></div>
       <div class="stats" id="stats"></div>
     </div>
 
@@ -140,7 +148,8 @@ select{background:var(--bg);border:1px solid var(--line);color:var(--txt);
 </div>
 
 <script type="module">
-import { buildSurface, contours, hypsoColor, hillshade, polyArea } from './assets/js/geom.js';
+import { buildSurface, contours, hypsoColor, hillshade, polyArea, sampleSurface }
+  from './assets/js/geom.js';
 
 /* ── datos de la libreta ─────────────────────────────────────────────────
    x: desde el linde derecho → 2,10 m; +4 m; +5,3 m; y el linde izquierdo.
@@ -155,7 +164,7 @@ const YS = [30, 25, 20, 15, 10, 5, 0];
 const LIBRETA = [
   [ 0.00,  0.00,  0.00,  0.00],
   [-0.33, -0.50, -0.50, -0.59],
-  [ 0.53, -0.85, -0.82, -0.91],
+  [-0.53, -0.85, -0.82, -0.91],
   [-0.08, -0.20, -0.57, -0.82],
   [-0.78, -0.15, -0.19, -0.30],
   [-0.73, -0.30, -0.18, -0.04],
@@ -235,21 +244,32 @@ function dibujar() {
   const pts = puntos();
   const surf = buildSurface(pts, BORDE, { res: 0.2 });
   const cont = contours(surf, INTERVALO);
+  CACHE = { surf, cont, pts };
   pintarPlano(surf, cont, pts);
   pintarStats(pts, surf);
   pintarPerfil();
 }
 
-function pintarPlano(surf, cont, pts) {
-  const cv = document.getElementById('plano');
-  const dpr = window.devicePixelRatio || 1;
-  const W = cv.clientWidth, H = cv.clientHeight;
-  cv.width = W * dpr; cv.height = H * dpr;
-  const g = cv.getContext('2d');
-  g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  g.clearRect(0, 0, W, H);
+/** Última superficie calculada, para repintar al mover el puntero sin rehacer el spline. */
+let CACHE = null;
+/** Superficie y transformación en pantalla, para poder leer la cota bajo el ratón. */
+let SURF = null, TR = null;
 
-  const pad = 30;
+/**
+ * Dibuja el plano en cualquier lienzo. `claro` usa paleta de papel, para el
+ * informe que se imprime; sin él, la oscura de la pantalla.
+ */
+function pintarEn(g, W, H, surf, cont, pts, claro = false, escala = 1) {
+  const col = claro
+    ? { fondo:'#fff', borde:'#222', curva:'rgba(120,95,50,.55)', maestra:'#7a5c28',
+        etiq:'#fff', etiqTxt:'#5c451e', punto:'#1f6feb', puntoTxt:'#12233a', puntoFondo:'rgba(255,255,255,.85)' }
+    : { fondo:'#0a0e13', borde:'#e6edf3', curva:'rgba(200,220,240,.45)', maestra:'rgba(255,236,190,.95)',
+        etiq:'rgba(10,14,19,.85)', etiqTxt:'#ffecbe',
+        punto:'#4ea8de', puntoTxt:'#e6edf3', puntoFondo:'rgba(10,14,19,.82)' };
+
+  g.fillStyle = col.fondo; g.fillRect(0, 0, W, H);
+
+  const pad = 34 * escala;
   const s = Math.min((W - pad * 2) / ANCHO, (H - pad * 2) / FONDO);
   const ox = (W - ANCHO * s) / 2, oy = (H - FONDO * s) / 2;
   const X = x => ox + x * s;
@@ -268,8 +288,11 @@ function pintarPlano(surf, cont, pts) {
       let c = hypsoColor((v - surf.zmin) / span);
       const sh = hs[si];
       const f = Number.isNaN(sh) ? 1 : 0.45 + 0.75 * sh;
-      d[di] = Math.min(255, c[0] * f); d[di+1] = Math.min(255, c[1] * f);
-      d[di+2] = Math.min(255, c[2] * f); d[di+3] = 245;
+      c = [c[0] * f, c[1] * f, c[2] * f];
+      // En papel el relieve va aclarado, para que las curvas y los números manden
+      if (claro) c = c.map(v2 => v2 * 0.55 + 255 * 0.45);
+      d[di] = Math.min(255, c[0]); d[di+1] = Math.min(255, c[1]);
+      d[di+2] = Math.min(255, c[2]); d[di+3] = claro ? 255 : 245;
     }
     const off = document.createElement('canvas');
     off.width = nx; off.height = ny;
@@ -289,44 +312,130 @@ function pintarPlano(surf, cont, pts) {
       g.moveTo(X(l[0].x), Y(l[0].y));
       for (let i = 1; i < l.length; i++) g.lineTo(X(l[i].x), Y(l[i].y));
     }
-    g.strokeStyle = maestra ? 'rgba(255,236,190,.95)' : 'rgba(200,220,240,.45)';
-    g.lineWidth = maestra ? 1.6 : .8;
+    g.strokeStyle = maestra ? col.maestra : col.curva;
+    g.lineWidth = (maestra ? 1.6 : .8) * escala;
     g.stroke();
     if (maestra) {
       const l = c.lines.find(q => q.length > 12);
       if (l) {
         const m = l[Math.floor(l.length / 2)];
-        g.font = '600 10px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.font = `600 ${10 * escala}px system-ui`; g.textAlign = 'center'; g.textBaseline = 'middle';
         const t = fmt(c.level);
         const w = g.measureText(t).width;
-        g.fillStyle = 'rgba(10,14,19,.85)';
-        g.fillRect(X(m.x) - w / 2 - 3, Y(m.y) - 6.5, w + 6, 13);
-        g.fillStyle = '#ffecbe'; g.fillText(t, X(m.x), Y(m.y) + .5);
+        g.fillStyle = col.etiq;
+        g.fillRect(X(m.x) - w / 2 - 3 * escala, Y(m.y) - 6.5 * escala, w + 6 * escala, 13 * escala);
+        g.fillStyle = col.etiqTxt; g.fillText(t, X(m.x), Y(m.y) + .5);
       }
     }
   }
 
   // borde y calle
-  g.strokeStyle = '#e6edf3'; g.lineWidth = 2;
+  g.strokeStyle = col.borde; g.lineWidth = 2 * escala;
   g.strokeRect(X(0), Y(FONDO), ANCHO * s, FONDO * s);
-  g.strokeStyle = '#f0a35e'; g.lineWidth = 5; g.lineCap = 'round';
+  g.strokeStyle = '#e07a20'; g.lineWidth = 5 * escala; g.lineCap = 'round';
   g.beginPath(); g.moveTo(X(0), Y(0)); g.lineTo(X(ANCHO), Y(0)); g.stroke();
-  g.font = '600 11px system-ui'; g.fillStyle = '#f0a35e'; g.textAlign = 'center';
-  g.fillText('CALLE', X(ANCHO / 2), Y(0) + 16);
+  g.font = `600 ${11 * escala}px system-ui`; g.fillStyle = '#c25f0a'; g.textAlign = 'center';
+  g.fillText('CALLE', X(ANCHO / 2), Y(0) + 17 * escala);
+
+  // acotaciones del borde, apartadas de las etiquetas de cota
+  g.fillStyle = claro ? '#555' : '#9aa7b4'; g.font = `${10.5 * escala}px system-ui`;
+  g.textBaseline = 'alphabetic';
+  g.fillText(fmtN(ANCHO, 2) + ' m', X(ANCHO / 2), Y(FONDO) - 24 * escala);
+  g.save();
+  g.translate(X(0) - 26 * escala, Y(FONDO / 2)); g.rotate(-Math.PI / 2);
+  g.fillText(fmtN(FONDO, 0) + ' m', 0, 0);
+  g.restore();
 
   // cotas
-  g.font = '600 9.5px system-ui'; g.textBaseline = 'middle';
+  g.font = `600 ${9.5 * escala}px system-ui`; g.textBaseline = 'middle';
   for (const p of pts) {
-    g.beginPath(); g.arc(X(p.x), Y(p.y), 3.4, 0, 7);
-    g.fillStyle = '#4ea8de'; g.fill();
-    g.strokeStyle = '#0a0e13'; g.lineWidth = 1.4; g.stroke();
+    g.beginPath(); g.arc(X(p.x), Y(p.y), 3.4 * escala, 0, 7);
+    g.fillStyle = col.punto; g.fill();
+    g.strokeStyle = col.fondo; g.lineWidth = 1.4 * escala; g.stroke();
     const t = fmt(p.z);
     const w = g.measureText(t).width;
-    g.fillStyle = 'rgba(10,14,19,.82)';
-    g.fillRect(X(p.x) - w / 2 - 2.5, Y(p.y) - 16, w + 5, 12);
-    g.fillStyle = '#e6edf3'; g.textAlign = 'center';
-    g.fillText(t, X(p.x), Y(p.y) - 10);
+    g.fillStyle = col.puntoFondo;
+    g.fillRect(X(p.x) - w / 2 - 2.5 * escala, Y(p.y) - 16 * escala, w + 5 * escala, 12 * escala);
+    g.fillStyle = col.puntoTxt; g.textAlign = 'center';
+    g.fillText(t, X(p.x), Y(p.y) - 10 * escala);
   }
+  return { X, Y, s, ox, oy };
+}
+
+function pintarPlano(surf, cont, pts) {
+  const cv = document.getElementById('plano');
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  TR = pintarEn(g, W, H, surf, cont, pts, false, 1);
+  SURF = surf;
+  dibujarCursor();
+}
+
+/* ── lectura de cota bajo el puntero ── */
+let cursor = null;
+
+function dibujarCursor() {
+  const cap = document.getElementById('lectura');
+  if (!cursor || !SURF || !TR) {
+    cap.classList.remove('on');
+    cap.innerHTML = '<b>—</b><span>pasa el dedo o el ratón por el plano para leer la cota ' +
+      'de cualquier punto</span>';
+    return;
+  }
+  const cv = document.getElementById('plano');
+  const g = cv.getContext('2d');
+  const { X, Y } = TR;
+  const px = X(cursor.x), py = Y(cursor.y);
+
+  g.save();
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1; g.setLineDash([4, 4]);
+  g.beginPath();
+  g.moveTo(px, TR.oy); g.lineTo(px, TR.oy + FONDO * TR.s);
+  g.moveTo(TR.ox, py); g.lineTo(TR.ox + ANCHO * TR.s, py);
+  g.stroke(); g.setLineDash([]);
+  g.beginPath(); g.arc(px, py, 6, 0, 7);
+  g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke();
+  g.restore();
+
+  cap.classList.add('on');
+  cap.innerHTML = Number.isFinite(cursor.z)
+    ? `<b>${fmt(cursor.z)} m</b><span>a ${fmtN(cursor.y, 1)} m de la calle · ${fmtN(cursor.x, 1)} m del linde izquierdo</span>`
+    : '<b>—</b><span>fuera de la parcela</span>';
+}
+
+/** Repinta solo el plano, reaprovechando la superficie ya interpolada. */
+function repintarPlano() {
+  if (CACHE) pintarPlano(CACHE.surf, CACHE.cont, CACHE.pts);
+}
+
+function alMover(ev) {
+  if (!SURF || !TR) return;
+  if (ev.touches) ev.preventDefault();
+  const cv = document.getElementById('plano');
+  const r = cv.getBoundingClientRect();
+  const t = ev.touches ? ev.touches[0] : ev;
+  const px = t.clientX - r.left, py = t.clientY - r.top;
+  const x = (px - TR.ox) / TR.s;
+  const y = FONDO - (py - TR.oy) / TR.s;
+  cursor = (x < -0.5 || x > ANCHO + 0.5 || y < -0.5 || y > FONDO + 0.5)
+    ? null
+    : { x: Math.min(Math.max(x, 0), ANCHO), y: Math.min(Math.max(y, 0), FONDO), z: NaN };
+  if (cursor) cursor.z = sampleSurface(SURF, cursor.x, cursor.y);
+  repintarPlano();
+}
+
+function alSalir() { cursor = null; repintarPlano(); }
+
+{
+  const cv = document.getElementById('plano');
+  cv.addEventListener('mousemove', alMover);
+  cv.addEventListener('mouseleave', alSalir);
+  cv.addEventListener('touchstart', alMover, { passive: false });
+  cv.addEventListener('touchmove', alMover, { passive: false });
+  cv.addEventListener('touchend', alSalir);
 }
 
 function pintarStats(pts, surf) {
@@ -351,6 +460,60 @@ function pintarStats(pts, surf) {
 }
 
 /* ── perfil ── */
+function pintarPerfilEn(g, W, H, j, claro = false, escala = 1) {
+  const col = claro
+    ? { reja:'#d8dee6', eje:'#666', relleno:'rgba(30,120,80,.16)', linea:'#1f7a52',
+        punto:'#1f7a52', txt:'#1a2b22', calle:'#c25f0a', fondo:'#666', etiq:'rgba(255,255,255,.88)' }
+    : { reja:'#2a3441', eje:'#9aa7b4', relleno:'rgba(94,225,160,.22)', linea:'#5ee1a0',
+        punto:'#5ee1a0', txt:'#e6edf3', calle:'#f0a35e', fondo:'#9aa7b4', etiq:'rgba(13,17,23,.8)' };
+
+  const vals = YS.map((y, i) => ({ y, z: Z[i][j] })).sort((a, b) => a.y - b.y);
+  const zs = vals.map(v => v.z);
+  // Rejilla en valores redondos: 20 cm si el desnivel da para ello, si no 10
+  const paso = Math.max(...zs, 0) - Math.min(...zs, 0) > 0.5 ? 0.2 : 0.1;
+  const lo = Math.floor((Math.min(...zs, 0) - .06) / paso) * paso;
+  const hi = Math.ceil((Math.max(...zs, 0) + .06) / paso) * paso;
+  const L = 46 * escala, R = 30 * escala, T = 16 * escala, B = 26 * escala;
+  const X = y => L + y / FONDO * (W - L - R);
+  const Y = z => T + (hi - z) / (hi - lo) * (H - T - B);
+  // Las cotas de los extremos se apartan hacia dentro: centradas se saldrían del
+  // lienzo y se comerían los números del eje
+  const dentro = (t, y) => {
+    const w = g.measureText(t).width / 2 + 4 * escala;
+    return X(y) + (y === 0 ? w : y === FONDO ? -w : 0);
+  };
+
+  g.strokeStyle = col.reja; g.lineWidth = 1 * escala;
+  g.font = `${9 * escala}px system-ui`; g.textAlign = 'right'; g.textBaseline = 'middle';
+  for (let k = 0; k <= Math.round((hi - lo) / paso); k++) {
+    const z = Math.round((lo + k * paso) * 100) / 100;
+    g.beginPath(); g.moveTo(L, Y(z)); g.lineTo(W - R, Y(z)); g.stroke();
+    g.fillStyle = col.eje; g.fillText(fmt(z === 0 ? 0 : z), L - 5 * escala, Y(z));
+  }
+  g.beginPath();
+  g.moveTo(X(0), H - B);
+  vals.forEach(v => g.lineTo(X(v.y), Y(v.z)));
+  g.lineTo(X(FONDO), H - B); g.closePath();
+  g.fillStyle = col.relleno; g.fill();
+  g.beginPath();
+  vals.forEach((v, i) => i ? g.lineTo(X(v.y), Y(v.z)) : g.moveTo(X(v.y), Y(v.z)));
+  g.strokeStyle = col.linea; g.lineWidth = 2.2 * escala; g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'bottom';
+  g.font = `600 ${10 * escala}px system-ui`;
+  vals.forEach(v => {
+    g.beginPath(); g.arc(X(v.y), Y(v.z), 3.5 * escala, 0, 7); g.fillStyle = col.punto; g.fill();
+    const t = fmt(v.z), cx = dentro(t, v.y), cy = Y(v.z) - 6 * escala;
+    const w = g.measureText(t).width;
+    g.fillStyle = col.etiq;   // sin fondo, la propia línea tacha el número
+    g.fillRect(cx - w / 2 - 2 * escala, cy - 11 * escala, w + 4 * escala, 12 * escala);
+    g.fillStyle = col.txt;
+    g.fillText(t, cx, cy);
+  });
+  g.font = `600 ${10 * escala}px system-ui`;
+  g.fillStyle = col.calle; g.fillText('CALLE', X(0) + 12 * escala, H - 4 * escala);
+  g.fillStyle = col.fondo; g.fillText('fondo', X(FONDO) - 12 * escala, H - 4 * escala);
+}
+
 function pintarPerfil() {
   const j = +document.getElementById('selPerfil').value;
   const cv = document.getElementById('perfil');
@@ -360,38 +523,7 @@ function pintarPerfil() {
   const g = cv.getContext('2d');
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.clearRect(0, 0, W, H);
-
-  const vals = YS.map((y, i) => ({ y, z: Z[i][j] })).sort((a, b) => a.y - b.y);
-  const zs = vals.map(v => v.z);
-  const lo = Math.min(...zs, 0) - .1, hi = Math.max(...zs, 0) + .1;
-  const L = 44, R = 12, T = 14, B = 26;
-  const X = y => L + y / FONDO * (W - L - R);
-  const Y = z => T + (hi - z) / (hi - lo) * (H - T - B);
-
-  g.strokeStyle = '#2a3441'; g.lineWidth = 1;
-  g.font = '9px system-ui'; g.textAlign = 'right'; g.textBaseline = 'middle';
-  for (let k = 0; k <= 4; k++) {
-    const z = lo + (hi - lo) * k / 4;
-    g.beginPath(); g.moveTo(L, Y(z)); g.lineTo(W - R, Y(z)); g.stroke();
-    g.fillStyle = '#9aa7b4'; g.fillText(fmtN(z, 2), L - 5, Y(z));
-  }
-  g.beginPath();
-  g.moveTo(X(0), H - B);
-  vals.forEach(v => g.lineTo(X(v.y), Y(v.z)));
-  g.lineTo(X(FONDO), H - B); g.closePath();
-  g.fillStyle = 'rgba(94,225,160,.22)'; g.fill();
-  g.beginPath();
-  vals.forEach((v, i) => i ? g.lineTo(X(v.y), Y(v.z)) : g.moveTo(X(v.y), Y(v.z)));
-  g.strokeStyle = '#5ee1a0'; g.lineWidth = 2.2; g.stroke();
-  g.textAlign = 'center'; g.textBaseline = 'bottom';
-  vals.forEach(v => {
-    g.beginPath(); g.arc(X(v.y), Y(v.z), 3.5, 0, 7); g.fillStyle = '#5ee1a0'; g.fill();
-    g.fillStyle = '#e6edf3'; g.font = '600 10px system-ui';
-    g.fillText(fmt(v.z), X(v.y), Y(v.z) - 6);
-  });
-  g.fillStyle = '#f0a35e'; g.font = '600 10px system-ui';
-  g.fillText('CALLE', X(0) + 12, H - 4);
-  g.fillStyle = '#9aa7b4'; g.fillText('fondo', X(FONDO) - 12, H - 4);
+  pintarPerfilEn(g, W, H, j, false, 1);
 }
 
 /* ── acciones ── */
@@ -400,12 +532,184 @@ document.getElementById('reset').addEventListener('click', () => {
   sincronizar(); dibujar();
 });
 
-document.getElementById('hipotesis').addEventListener('click', () => {
-  // Las tres cotas de arriba del linde izquierdo comparten una referencia (1,09 m)
-  // distinta de las de abajo. Si no estaban unificadas, van desplazadas en bloque.
-  [1, 2, 3].forEach(i => { Z[i][0] = Math.round((LIBRETA[i][0] - 0.86) * 100) / 100; });
-  sincronizar(); dibujar();
-});
+/* ── informe en un solo fichero ──────────────────────────────────────────
+   Un .html autocontenido: los dibujos van dentro como PNG en base64, así que
+   se abre con doble clic en cualquier ordenador y se puede mandar por correo
+   sin adjuntos sueltos.                                                    */
+function lienzo(W, H, pintor) {
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  pintor(cv.getContext('2d'), W, H);
+  return cv.toDataURL('image/png');
+}
+
+function informe() {
+  const { surf, cont, pts } = CACHE;
+  // El plano se dibuja al doble del tamaño al que se enseña (560 px), para que salga
+  // fino en pantalla de retina y al imprimirlo
+  const plano = lienzo(1120, 2184, (g, W, H) => pintarEn(g, W, H, surf, cont, pts, true, 2));
+  const perfiles = LINEAS.map((l, j) => ({
+    linea: l,
+    img: lienzo(1600, 520, (g, W, H) => {
+      g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+      pintarPerfilEn(g, W, H, j, true, 3);
+    }),
+  }));
+
+  const zs = pts.map(p => p.z);
+  const zmin = Math.min(...zs), zmax = Math.max(...zs);
+  const iCalle = YS.indexOf(0), iFondo = YS.indexOf(30);
+
+  const resumen = LINEAS.map((l, j) => {
+    const desnivel = Z[iFondo][j] - Z[iCalle][j];
+    return { n: l.n, x: l.x, nota: l.nota, desnivel, pend: desnivel / FONDO * 100,
+             lo: Math.min(...Z.map(f => f[j])), hi: Math.max(...Z.map(f => f[j])) };
+  });
+  const pendMedia = resumen.reduce((a, r) => a + r.pend, 0) / resumen.length;
+
+  const filas = YS.map((y, i) =>
+    `<tr${y === 0 ? ' class="calle"' : ''}><th>${y} m${y === 0 ? ' · calle' : y === 30 ? ' · fondo' : ''}</th>` +
+    LINEAS.map((l, j) =>
+      `<td class="c${DUDOSAS.has(`${i},${j}`) ? ' dudosa' : ''}">${fmt(Z[i][j])}</td>`).join('') +
+    '</tr>').join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Navata · levantamiento topográfico</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#eef1f4;color:#1b2229;
+  font:15px/1.6 Georgia,"Times New Roman",serif}
+.hoja{max-width:900px;margin:22px auto;background:#fff;padding:34px 40px 46px;
+  box-shadow:0 2px 14px rgba(0,0,0,.12)}
+h1{font-size:26px;margin:0 0 2px;letter-spacing:.2px}
+h2{font-size:16px;margin:34px 0 10px;padding-bottom:5px;border-bottom:1.5px solid #1b2229;
+  text-transform:uppercase;letter-spacing:1.1px;font-family:system-ui,sans-serif}
+.sub{color:#5a6672;margin:0 0 20px;font-size:14px}
+.cajetin{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:#c9d2da;border:1px solid #c9d2da;margin-bottom:6px}
+.cajetin div{background:#fff;padding:8px 11px}
+.cajetin b{display:block;font:600 15px/1.3 system-ui,sans-serif}
+.cajetin span{font-size:10.5px;color:#69737e;text-transform:uppercase;letter-spacing:.6px;
+  font-family:system-ui,sans-serif}
+img{max-width:100%;display:block;margin:0 auto}
+.plano img{width:560px}
+figure{margin:0 0 18px}
+figcaption{font-size:12.5px;color:#5a6672;text-align:center;margin-top:6px;
+  font-family:system-ui,sans-serif}
+table{border-collapse:collapse;width:100%;font-family:system-ui,sans-serif;font-size:13.5px}
+th,td{border:1px solid #c9d2da;padding:6px 8px;text-align:center;
+  font-variant-numeric:tabular-nums}
+thead th{background:#eef1f4;font-size:12px}
+tbody th{background:#f7f9fb;text-align:right;font-weight:600;font-size:12.5px;white-space:nowrap}
+tr.calle td,tr.calle th{border-top:2px solid #e07a20}
+td.dudosa{background:#fdf0dd}
+p{margin:0 0 11px}
+ul{margin:0 0 11px;padding-left:20px}
+.pie{margin-top:34px;padding-top:12px;border-top:1px solid #c9d2da;
+  font-size:12px;color:#69737e;font-family:system-ui,sans-serif}
+.imprimir{position:fixed;right:18px;top:18px;background:#1b2229;color:#fff;border:0;
+  border-radius:8px;padding:11px 16px;font:600 14px system-ui,sans-serif;cursor:pointer}
+@media print{
+  body{background:#fff}
+  .hoja{box-shadow:none;margin:0;max-width:none;padding:0}
+  .imprimir{display:none}
+  h2{page-break-after:avoid}
+  figure,table{page-break-inside:avoid}
+}
+</style></head><body>
+<button class="imprimir" onclick="window.print()">Imprimir / guardar en PDF</button>
+<div class="hoja">
+
+<h1>La Navata — levantamiento topográfico</h1>
+<p class="sub">Parcela de ${fmtN(ANCHO, 2)} m de frente a la calle × ${fmtN(FONDO, 0)} m de fondo.
+Medido el 9 de agosto de 2026 con cuerda nivelada.</p>
+
+<div class="cajetin">
+  <div><b>${fmtN(polyArea(BORDE), 0)} m²</b><span>Superficie</span></div>
+  <div><b>${fmtN(zmax - zmin, 2)} m</b><span>Desnivel total</span></div>
+  <div><b>${fmtN(Math.abs(pendMedia), 1)} %</b><span>Pendiente media hacia la calle</span></div>
+  <div><b>28</b><span>Cotas medidas</span></div>
+</div>
+
+<h2>Plano de curvas de nivel</h2>
+<figure class="plano">
+  <img src="${plano}" alt="Plano de curvas de nivel de la parcela">
+  <figcaption>Curvas cada 10 cm; las gruesas y acotadas, cada 50 cm. El color va de los
+  puntos bajos (verde) a los altos (ocre). Los números azules son las 28 cotas medidas.
+  La calle queda abajo.</figcaption>
+</figure>
+
+<h2>Cómo se lee</h2>
+<p>Las cotas son <b>relativas</b>: no son altura sobre el nivel del mar, sino diferencias
+respecto al fondo de la parcela, al que se le ha dado el valor 0,00. Un −0,91 significa
+noventa y un centímetros <i>por debajo</i> del fondo.</p>
+<p>Cada curva de nivel une los puntos que están a la misma altura. Donde las curvas se
+juntan, el terreno cae deprisa; donde se separan, está tendido.</p>
+
+<h2>Cotas medidas (m)</h2>
+<p>Cuatro tendidos a lo largo de la parcela, con un punto cada 5 m. Las posiciones
+<i>x</i> se miden desde el linde izquierdo.</p>
+<table>
+  <thead><tr><th>Distancia<br>a la calle</th>${LINEAS.map(l =>
+    `<th>${l.n}<br>x = ${fmtN(l.x, 2)} m</th>`).join('')}</tr></thead>
+  <tbody>${filas}</tbody>
+</table>
+<p style="font-size:12.5px;color:#5a6672;margin-top:8px;font-family:system-ui,sans-serif">
+Sombreadas en naranja las cotas pendientes de comprobar: la altura de cuerda que implican
+no coincide con la del resto de su tendido.</p>
+
+<h2>Perfiles longitudinales</h2>
+${perfiles.map((p, k) => {
+  const r = resumen[k];
+  const sitio = p.linea.x === 0 ? 'sobre el linde izquierdo'
+    : `a ${fmtN(p.linea.x, 2)} m del linde izquierdo` +
+      (p.linea.nota.includes('derecho') ? `, ${p.linea.nota}` : '');
+  return `<figure>
+  <img src="${p.img}" alt="Perfil del tendido ${p.linea.n}">
+  <figcaption>${p.linea.n} — ${sitio}. De la calle al fondo
+    ${r.desnivel >= 0 ? 'sube' : 'baja'} ${fmtN(Math.abs(r.desnivel), 2)} m
+    (${fmtN(Math.abs(r.pend), 1)} %).</figcaption>
+</figure>`;
+}).join('')}
+
+<h2>Resumen por tendido</h2>
+<table>
+  <thead><tr><th>Tendido</th><th>x (m)</th><th>Cota mínima</th><th>Cota máxima</th>
+    <th>Calle → fondo</th><th>Pendiente</th></tr></thead>
+  <tbody>${resumen.map(r => `<tr><th>${r.n}</th><td>${fmtN(r.x, 2)}</td><td>${fmt(r.lo)}</td>
+    <td>${fmt(r.hi)}</td><td>${fmt(r.desnivel)}</td>
+    <td>${fmtN(Math.abs(r.pend), 1)} %</td></tr>`).join('')}</tbody>
+</table>
+
+<h2>Cómo se midió</h2>
+<ul>
+  <li>Nivel de agua con manguera transparente para trasladar la referencia a lo largo
+      de la parcela, con el extremo fijo dentro de una garrafa que hace de depósito.</li>
+  <li>Después, hilo tendido y nivelado entre dos estacas, midiendo con regla la caída
+      hasta el suelo cada 5 m. Los palos se movían de tendido en tendido.</li>
+  <li>Error estimado del orden de <b>±5 cm</b> por punto. Las cotas no tienen valor legal:
+      sirven para proyectar movimientos de tierra, desagües y accesos.</li>
+  <li>El terreno entre puntos medidos está <b>interpolado</b> con un spline de placa
+      delgada. Las curvas alejadas de los puntos azules son estimaciones.</li>
+</ul>
+
+<div class="pie">
+  Medidas de campo del 9 de agosto de 2026. Documento generado el
+  ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+  con la aplicación de levantamiento de La Navata.
+</div>
+</div></body></html>`;
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+  a.download = 'la-navata-topografia.html';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+document.getElementById('informe').addEventListener('click', informe);
 
 document.getElementById('descargar').addEventListener('click', () => {
   const pts = [];

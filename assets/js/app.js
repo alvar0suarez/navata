@@ -1234,7 +1234,7 @@ renderPhotos();
    dos. Aquí se detecta, se avisa y se aplica cuando el usuario lo acepta. */
 
 // Debe coincidir con VERSION en sw.js
-const APP_VERSION = '2026.08.09-5';
+const APP_VERSION = '2026.08.09-6';
 
 let swReg = null;
 let recargando = false;
